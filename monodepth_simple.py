@@ -59,7 +59,7 @@ def test_simple(params):
     input_images = np.stack((input_image, np.fliplr(input_image)), 0)
 
     # SUMMARY
-    writer = tf.summary.FileWriter('./graphs')
+    writer = tf.summary.FileWriter('~/Projects/DeepLearningProject/monodepth/graphs/simple')
 
     # SESSION
     config = tf.ConfigProto(allow_soft_placement=True)
