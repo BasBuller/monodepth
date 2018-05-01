@@ -1,0 +1,6 @@
+graphs/
+models/
+__pycache__/
+*.jpg
+*.npy
+*.png
