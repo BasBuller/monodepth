@@ -4,3 +4,4 @@ __pycache__/
 *.jpg
 *.npy
 *.png
+virtual_environment.sh

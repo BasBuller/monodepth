@@ -14,6 +14,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='1'
 
 import numpy as np
+import scipy as scp
 import argparse
 import re
 import time
@@ -223,6 +224,9 @@ def test(params):
         output_directory = args.output_directory
     np.save(output_directory + '/disparities.npy',    disparities)
     np.save(output_directory + '/disparities_pp.npy', disparities_pp)
+
+    disp_to_img = scp.misc.imresize(disp_pp.squeeze(), [original_height, original_width])
+    plt.imsave(os.path.join(output_directory, "{}_disp.png".format(output_name)), disp_to_img, cmap='plasma')
 
     print('done.')
 
