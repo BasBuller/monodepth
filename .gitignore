@@ -1,8 +1,1 @@
-graphs/
-models/
-data/
-output/
 __pycache__/
-*.jpg
-*.npy
-*.png

@@ -1,7 +1,7 @@
 #!/bin/sh
-python ~/Projects/DeepLearningProject/monodepth/monodepth_main.py --mode test \
---data_path ~/Projects/DeepLearningProject/monodepth/data/KITTI_stereo_2015_left/ \
---filenames_file ~/Projects/DeepLearningProject/monodepth/data/KITTI_stereo_2015_left_filenames.txt \
---output_directory ~/Projects/DeepLearningProject/monodepth/output
---log_directory ~/Projects/DeepLearningProject/monodepth/logs \
---checkpoint_path ~/Projects/DeepLearningProject/monodepth/models/model_city2kitti
+python monodepth_main.py --mode test \
+--data_path /media/huis/EMDrive/DeepLearningData/KITTI/stereo_2015/ \
+--filenames_file utils/filenames/kitti_stereo_2015_test_files_png.txt \
+--output_directory disparities/ \
+--log_directory logs/ \
+--checkpoint_path models/model_city2kitti
