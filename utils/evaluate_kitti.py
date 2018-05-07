@@ -1,5 +1,5 @@
 import numpy as np
-import cv, cv2
+import cv2
 import argparse
 import pandas as pd
 from evaluation_utils import *

@@ -1,5 +1,5 @@
 #!/bin/sh
-python evaluate_kitti.py \
+python utils/evaluate_kitti.py \
 --split kitti \
 --predicted_disp_path disparities/disparities.npy \
 --results_path results/results.pickle \

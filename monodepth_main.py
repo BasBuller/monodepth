@@ -185,7 +185,7 @@ def test(params):
     model = MonodepthModel(params, args.mode, left, right)
 
     # SUMMARY
-    writer = tf.summary.FileWriter('~/Projects/DeepLearningProject/monodepth/graphs/main')
+    writer = tf.summary.FileWriter('graphs/main')
 
     # SESSION
     config = tf.ConfigProto(allow_soft_placement=True)

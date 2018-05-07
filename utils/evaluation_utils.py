@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
-import cv, cv2
+import cv2
 from collections import Counter
 import pickle
 
@@ -44,7 +44,7 @@ def convert_disps_to_depths_kitti(gt_disparities, pred_disparities):
     gt_depths = []
     pred_depths = []
     pred_disparities_resized = []
-    
+
     for i in range(len(gt_disparities)):
         gt_disp = gt_disparities[i]
         height, width = gt_disp.shape
@@ -52,7 +52,7 @@ def convert_disps_to_depths_kitti(gt_disparities, pred_disparities):
         pred_disp = pred_disparities[i]
         pred_disp = width * cv2.resize(pred_disp, (width, height), interpolation=cv2.INTER_LINEAR)
 
-        pred_disparities_resized.append(pred_disp) 
+        pred_disparities_resized.append(pred_disp)
 
         mask = gt_disp > 0
 
@@ -88,7 +88,7 @@ def read_file_data(files, data_root):
         date = splits[0]
         im_id = splits[4][:10]
         file_root = '{}/{}'
-        
+
         im = filename
         vel = '{}/{}/velodyne_points/data/{}.bin'.format(splits[0], splits[1], im_id)
 
@@ -101,7 +101,7 @@ def read_file_data(files, data_root):
         else:
             num_probs += 1
             print('{} missing'.format(data_root + im))
-    print num_probs, 'files missing'
+    print(num_probs, 'files missing')
 
     return gt_files, gt_calib, im_sizes, im_files, cams
 
