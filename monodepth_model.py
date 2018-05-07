@@ -1,10 +1,10 @@
-# Copyright UCL Business plc 2017. Patent Pending. All rights reserved. 
+# Copyright UCL Business plc 2017. Patent Pending. All rights reserved.
 #
 # The MonoDepth Software is licensed under the terms of the UCLB ACP-A licence
 # which allows for non-commercial use only, the full terms of which are made
 # available in the LICENSE file.
 #
-# For any other use of the software not covered by the UCLB ACP-A Licence, 
+# For any other use of the software not covered by the UCLB ACP-A Licence,
 # please contact info@uclb.com
 
 """Fully convolutional model for monocular depth estimation
@@ -21,7 +21,7 @@ import tensorflow.contrib.slim as slim
 
 from bilinear_sampler import *
 
-monodepth_parameters = namedtuple('parameters', 
+monodepth_parameters = namedtuple('parameters',
                         'encoder, '
                         'height, width, '
                         'batch_size, '
@@ -54,7 +54,7 @@ class MonodepthModel(object):
             return
 
         self.build_losses()
-        self.build_summaries()     
+        self.build_summaries()
 
     def gradient_x(self, img):
         gx = img[:,:,:-1,:] - img[:,:,1:,:]
@@ -192,7 +192,7 @@ class MonodepthModel(object):
             skip4 = conv4
             skip5 = conv5
             skip6 = conv6
-        
+
         with tf.variable_scope('decoder'):
             upconv7 = upconv(conv7,  512, 3, 2) #H/64
             concat7 = tf.concat([upconv7, skip6], 3)
@@ -251,7 +251,7 @@ class MonodepthModel(object):
             skip3 = conv2
             skip4 = conv3
             skip5 = conv4
-        
+
         # DECODING
         with tf.variable_scope('decoder'):
             upconv6 = upconv(conv5,   512, 3, 2) #H/32
