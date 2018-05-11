@@ -4,6 +4,8 @@ __pycache__/
 *.npy
 *.png
 virtual_environment.sh
+papers/
+.code-workspace
 =======
 __pycache__/
 >>>>>>> master
