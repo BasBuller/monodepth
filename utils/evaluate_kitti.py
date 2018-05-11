@@ -1,11 +1,13 @@
 import numpy as np
-import cv, cv2
+import cv2
 import argparse
+import pandas as pd
 from evaluation_utils import *
 
 parser = argparse.ArgumentParser(description='Evaluation on the KITTI dataset')
 parser.add_argument('--split',               type=str,   help='data split, kitti or eigen',         required=True)
 parser.add_argument('--predicted_disp_path', type=str,   help='path to estimated disparities',      required=True)
+parser.add_argument('--results_path',        type=str,   help='path to write results to (pickle)',  required=True)
 parser.add_argument('--gt_path',             type=str,   help='path to ground truth disparities',   required=True)
 parser.add_argument('--min_depth',           type=float, help='minimum depth for evaluation',        default=1e-3)
 parser.add_argument('--max_depth',           type=float, help='maximum depth for evaluation',        default=80)
@@ -20,7 +22,7 @@ if __name__ == '__main__':
 
     if args.split == 'kitti':
         num_samples = 200
-        
+
         gt_disparities = load_gt_disp_kitti(args.gt_path)
         gt_depths, pred_depths, pred_disparities_resized = convert_disps_to_depths_kitti(gt_disparities, pred_disparities)
 
@@ -55,9 +57,9 @@ if __name__ == '__main__':
     a1      = np.zeros(num_samples, np.float32)
     a2      = np.zeros(num_samples, np.float32)
     a3      = np.zeros(num_samples, np.float32)
-    
+
     for i in range(num_samples):
-        
+
         gt_depth = gt_depths[i]
         pred_depth = pred_depths[i]
 
@@ -67,18 +69,18 @@ if __name__ == '__main__':
         if args.split == 'eigen':
             mask = np.logical_and(gt_depth > args.min_depth, gt_depth < args.max_depth)
 
-            
+
             if args.garg_crop or args.eigen_crop:
                 gt_height, gt_width = gt_depth.shape
 
                 # crop used by Garg ECCV16
                 # if used on gt_size 370x1224 produces a crop of [-218, -3, 44, 1180]
                 if args.garg_crop:
-                    crop = np.array([0.40810811 * gt_height,  0.99189189 * gt_height,   
+                    crop = np.array([0.40810811 * gt_height,  0.99189189 * gt_height,
                                      0.03594771 * gt_width,   0.96405229 * gt_width]).astype(np.int32)
                 # crop we found by trial and error to reproduce Eigen NIPS14 results
                 elif args.eigen_crop:
-                    crop = np.array([0.3324324 * gt_height,  0.91351351 * gt_height,   
+                    crop = np.array([0.3324324 * gt_height,  0.91351351 * gt_height,
                                      0.0359477 * gt_width,   0.96405229 * gt_width]).astype(np.int32)
 
                 crop_mask = np.zeros(mask.shape)
@@ -98,3 +100,14 @@ if __name__ == '__main__':
 
     print("{:>10}, {:>10}, {:>10}, {:>10}, {:>10}, {:>10}, {:>10}, {:>10}".format('abs_rel', 'sq_rel', 'rms', 'log_rms', 'd1_all', 'a1', 'a2', 'a3'))
     print("{:10.4f}, {:10.4f}, {:10.3f}, {:10.3f}, {:10.3f}, {:10.3f}, {:10.3f}, {:10.3f}".format(abs_rel.mean(), sq_rel.mean(), rms.mean(), log_rms.mean(), d1_all.mean(), a1.mean(), a2.mean(), a3.mean()))
+
+    # Save to pickle file
+    results = pd.DataFrame({"abs_rel": abs_rel,
+                            "sq_rel": sq_rel,
+                            "rms": rms,
+                            "log_rms": log_rms,
+                            "a1": a1,
+                            "a2": a2,
+                            "a3": a3})
+
+    results.to_pickle(args.results_path)

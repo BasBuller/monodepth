@@ -1,7 +1,9 @@
-graphs/
-models/
+<<<<<<< HEAD
 __pycache__/
 *.jpg
 *.npy
 *.png
 virtual_environment.sh
+=======
+__pycache__/
+>>>>>>> master
