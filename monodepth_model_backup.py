@@ -134,15 +134,6 @@ class MonodepthModel(object):
         conv2 = self.conv(conv1, num_out_layers, kernel_size, 2)
         return conv2
 
-    def fire_module(self, x, squeeze=16, expand=64):
-        # Fire module, squeeze layer consists of 1x1 conv kernels
-        # Expand layer consists of 1x1 and 3x3 conv kernels
-        conv_sq     = self.conv(x,       squeeze, 1, 1)
-        conv_ex1    = self.conv(conv_sq, expand,  1, 1)
-        conv_ex3    = self.conv(conv_sq, expand,  3, 1)
-        out         = tf.concat([conv_ex1, conv_ex3], axis=2)       # Concatenate along the channel axis
-        return out
-
     def maxpool(self, x, kernel_size):
         p = np.floor((kernel_size - 1) / 2).astype(np.int32)
         p_x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]])
@@ -176,36 +167,6 @@ class MonodepthModel(object):
         p_x = tf.pad(x, [[0, 0], [1, 1], [1, 1], [0, 0]])
         conv = slim.conv2d_transpose(p_x, num_out_layers, kernel_size, scale, 'SAME')
         return conv[:,3:-1,3:-1,:]
-
-    def build_squeezenet(self):
-        if self.params.use_deconv:
-            upconv = self.deconv
-        else:
-            upconv = self.upconv
-
-        with tf.variable_scope('encoder'):
-            conv1   = self.conv(self.model_input,  96, 7, 2)    # Initial convolutional layer
-            pool1   = self.maxpool(conv1, 3)
-            fire2   = self.fire_module(pool1, squeeze=16, expand=64)
-            fire3   = self.fire_module(fire2, squeeze=16, expand=64)
-            fire4   = self.fire_module(fire3, squeeze=32, expand=128)
-            pool4   = self.maxpool(fire4, 3)
-            fire5   = self.fire_module(pool4, squeeze=32, expand=128)
-            fire6   = self.fire_module(fire5, squeeze=48, expand=192)
-            fire7   = self.fire_module(fire6, squeeze=48, expand=192)
-            fire8   = self.fire_module(fire7, squeeze=64, expand=256)
-            pool8   = self.maxpool(fire8, 3)
-            fire9   = self.fire_module(pool8, squeeze=64, expand=256)
-
-        with tf.variable_scope('skips'):
-            skip2   = fire2
-            skip4   = pool4
-            skip6   = fire6
-            skip8   = pool8
-
-        with tf.variable_scope('decoder'):
-            upconv9 = self.upconv(fire9, 200, 3, 2)
-
 
     def build_vgg(self):
         #set convenience functions

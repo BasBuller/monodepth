@@ -6,6 +6,9 @@ __pycache__/
 virtual_environment.sh
 papers/
 .code-workspace
+.vscode
+squeezenet_example/
+trial.py
 =======
 __pycache__/
 >>>>>>> master
