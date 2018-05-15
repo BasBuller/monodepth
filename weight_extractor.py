@@ -15,12 +15,12 @@ from pathlib import Path
 
 from monodepth_model import *
 
-parser = argparse.ArgumentParser(description='Monodepth TensorFlow implementation.')
+parser = argparse.ArgumentParser(description='Weight extraction for monodepth model.')
 
 parser.add_argument('--encoder',		  type=str,   help='type of encoder, vgg or resnet50', default='vgg')
 # parser.add_argument('--image_path',	   type=str,   help='path to the image', required=True)
 parser.add_argument('--checkpoint_path',  type=str,   help='path to a specific checkpoint to load', required=True)
-parser.add_argument('--input_height',	 type=int,   help='input height', default=256)
+parser.add_argument('--input_height',	 type=int,    help='input height', default=256)
 parser.add_argument('--input_width',	  type=int,   help='input width', default=512)
 
 args = parser.parse_args()
