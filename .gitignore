@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 __pycache__/
 *.jpg
 *.npy
@@ -12,6 +13,11 @@ trial.py
 models/
 squeezenet.pdf
 Godard_Paper.pdf
+.idea
 =======
 __pycache__/
+>>>>>>> master
+=======
+__pycache__/
+.idea
 >>>>>>> master
