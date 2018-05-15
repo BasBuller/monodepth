@@ -124,14 +124,14 @@ class MonodepthModel(object):
         disp = 0.3 * self.conv(x, 2, 3, 1, tf.nn.sigmoid)
         return disp
 
-    def conv(self, x, num_out_layers, kernel_size, stride, activation_fn=tf.nn.elu):
+    def conv(self, x, num_out_layers, kernel_size, stride, activation_fn=tf.nn.elu, trainable=True):
         p = np.floor((kernel_size - 1) / 2).astype(np.int32)
         p_x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]])
-        return slim.conv2d(p_x, num_out_layers, kernel_size, stride, 'VALID', activation_fn=activation_fn)
+        return slim.conv2d(p_x, num_out_layers, kernel_size, stride, 'VALID', activation_fn=activation_fn, trainable=trainable)
 
-    def conv_block(self, x, num_out_layers, kernel_size):
-        conv1 = self.conv(x,     num_out_layers, kernel_size, 1)
-        conv2 = self.conv(conv1, num_out_layers, kernel_size, 2)
+    def conv_block(self, x, num_out_layers, kernel_size, trainable=True):
+        conv1 = self.conv(x,     num_out_layers, kernel_size, 1, trainable=trainable)
+        conv2 = self.conv(conv1, num_out_layers, kernel_size, 2, trainable=trainable)
         return conv2
 
     def maxpool(self, x, kernel_size):
@@ -158,9 +158,9 @@ class MonodepthModel(object):
         out = self.resconv(out, num_layers, 2)
         return out
 
-    def upconv(self, x, num_out_layers, kernel_size, scale):
+    def upconv(self, x, num_out_layers, kernel_size, scale, trainable=True):
         upsample = self.upsample_nn(x, scale)
-        conv = self.conv(upsample, num_out_layers, kernel_size, 1)
+        conv = self.conv(upsample, num_out_layers, kernel_size, 1, trainable=trainable)
         return conv
 
     def deconv(self, x, num_out_layers, kernel_size, scale):
@@ -183,7 +183,7 @@ class MonodepthModel(object):
             conv4 = self.conv_block(conv3,            256, 3) # H/16
             conv5 = self.conv_block(conv4,            512, 3) # H/32
             conv6 = self.conv_block(conv5,            512, 3) # H/64
-            conv7 = self.conv_block(conv6,            512, 3) # H/128
+            conv7 = self.conv_block(conv6,            512, 3, trainable=False) # H/128
 
         with tf.variable_scope('skips'):
             skip1 = conv1
@@ -194,9 +194,9 @@ class MonodepthModel(object):
             skip6 = conv6
 
         with tf.variable_scope('decoder'):
-            upconv7 = upconv(conv7,  512, 3, 2) #H/64
+            upconv7 = upconv(conv7,  512, 3, 2, trainable=False) #H/64
             concat7 = tf.concat([upconv7, skip6], 3)
-            iconv7  = conv(concat7,  512, 3, 1)
+            iconv7  = conv(concat7,  512, 3, 1, trainable=False)
 
             upconv6 = upconv(skip6, 512, 3, 2) #H/32
             concat6 = tf.concat([upconv6, skip5], 3)
