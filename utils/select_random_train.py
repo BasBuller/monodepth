@@ -1,35 +1,37 @@
 import random
 import sys
 
+
 def random_sampler(filename, k):
-	"""
-	Function that selects k lines randomly from a file (of train images)
-	"""
+    """
+    Selects randomly k lines from a file
+    :param filename: File to select from
+    :param k: Number of lines to select
+    """
 
-	sample = []
+    sample = []
 
-	with open(filename, 'rb') as f:
+    with open(filename, 'rb') as f:
 
-		f.seek(0, 2)
-		filesize = f.tell()
+        f.seek(0, 2)
+        filesize = f.tell()
 
-		random_set = sorted(random.sample(range(filesize), k))
+        random_set = sorted(random.sample(range(filesize), k))
 
-		for i in range(k):
+        for i in range(k):
+            f.seek(random_set[i])
 
-			f.seek(random_set[i])
+            # Skip current line (because we might be in the middle of a line)
+            f.readline()
 
-			# Skip current line (because we might be in the middle of a line) 
-			f.readline()
+            # Append the next line to the sample set
+            sample.append(f.readline().rstrip())
 
-			# Append the next line to the sample set 
-			sample.append(f.readline().rstrip())
+    with open(filename.split('.')[0] + '_random.txt', 'w') as f:
 
-	with open(filename.split('.')[0]+'_random.txt', 'w') as f:
+        for s in sample:
+            f.write(s.decode('ascii') + '\n')
 
-		for s in sample:
-			f.write(s.decode('ascii')+'\n')
 
 if __name__ == '__main__':
-	
-	random_sampler(sys.argv[1], int(sys.argv[2]))
+    random_sampler(sys.argv[1], int(sys.argv[2]))

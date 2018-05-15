@@ -174,6 +174,7 @@ def train(params):
                 train_saver.save(sess, args.log_directory + '/' + args.model_name + '/model', global_step=step)
 
         train_saver.save(sess, args.log_directory + '/' + args.model_name + '/model', global_step=num_total_steps)
+        train_saver.save(sess, args.checkpoint_path + '/' + args.model_name, global_step=num_total_steps)
 
 def test(params):
     """Test function."""
@@ -185,14 +186,14 @@ def test(params):
     model = MonodepthModel(params, args.mode, left, right)
 
     # SUMMARY
-    writer = tf.summary.FileWriter('graphs/main')
+    summary_writer = tf.summary.FileWriter(args.log_directory + '/' + args.model_name)
 
     # SESSION
     config = tf.ConfigProto(allow_soft_placement=True)
     sess = tf.Session(config=config)
 
     # WRITE SUMMARY
-    writer.add_graph(sess.graph)
+    summary_writer.add_graph(sess.graph)
 
     # SAVER
     train_saver = tf.train.Saver()

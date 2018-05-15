@@ -15,7 +15,7 @@ from pathlib import Path
 
 from monodepth_model import *
 
-parser = argparse.ArgumentParser(description='Monodepth TensorFlow implementation.')
+parser = argparse.ArgumentParser(description='Weight extraction for monodepth model.')
 
 parser.add_argument('--encoder',          type=str,   help='type of encoder, vgg or resnet50', default='vgg')
 # parser.add_argument('--image_path',       type=str,   help='path to the image', required=True)
