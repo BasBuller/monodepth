@@ -9,6 +9,9 @@ papers/
 .vscode
 squeezenet_example/
 trial.py
+models/
+squeezenet.pdf
+Godard_Paper.pdf
 =======
 __pycache__/
 >>>>>>> master
