@@ -198,7 +198,7 @@ class MonodepthModel(object):
             concat7 = tf.concat([upconv7, skip6], 3)
             iconv7  = conv(concat7,  512, 3, 1)
 
-            upconv6 = upconv(iconv7, 512, 3, 2) #H/32
+            upconv6 = upconv(skip6, 512, 3, 2) #H/32
             concat6 = tf.concat([upconv6, skip5], 3)
             iconv6  = conv(concat6,  512, 3, 1)
 
