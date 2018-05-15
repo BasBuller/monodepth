@@ -171,9 +171,9 @@ class MonodepthModel(object):
     def fire_module(self, x, squeeze=16, expand1=64, expand3=64):
         # Fire module, squeeze layer consists of 1x1 conv kernels
         # Expand layer consists of 1x1 and 3x3 conv kernels
-        conv_sq     = self.conv(x,       squeeze, 1, 1, 1)
-        conv_ex1    = self.conv(conv_sq, expand1,  1, 1, 1)
-        conv_ex3    = self.conv(conv_sq, expand3,  3, 1, 1)
+        conv_sq     = self.conv(x,       squeeze, 1, 1)
+        conv_ex1    = self.conv(conv_sq, expand1,  1, 1)
+        conv_ex3    = self.conv(conv_sq, expand3,  3, 1)
         out         = tf.concat([conv_ex1, conv_ex3], axis=3)       # Concatenate along the channel axis, may be different axis?
         return out
 
@@ -193,9 +193,9 @@ class MonodepthModel(object):
         with tf.variable_scope('encoder'):
             conv1       = self.conv(self.model_input,  32, 7, 2)                        
             fire1b      = self.fire_module(conv1, squeeze=8, expand1=16, expand3=16)
-            fire1c      = self.fire_module(fire1, squeeze=8, expand1=16, expand3=16)
+            fire1c      = self.fire_module(fire1b, squeeze=8, expand1=16, expand3=16)
             
-            fire2       = self.fire_module(fire1b, squeeze=8, expand1=32, expand3=32)
+            fire2       = self.fire_module(fire1c, squeeze=8, expand1=32, expand3=32)
             maxpool2    = self.maxpool(fire2, 3)
             fire2b      = self.fire_module(maxpool2, squeeze=8, expand1=32, expand3=32)
             fire2c      = self.fire_module(fire2b, squeeze=8, expand1=32, expand3=32)
@@ -400,6 +400,8 @@ class MonodepthModel(object):
                     self.build_vgg()
                 elif self.params.encoder == 'resnet50':
                     self.build_resnet50()
+                elif self.params.encoder == 'squeeze_net':
+                    self.build_squeezenet()
                 else:
                     return None
 

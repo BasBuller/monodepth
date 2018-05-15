@@ -226,7 +226,7 @@ def test(params):
 
     print('writing disparities.')
     if args.output_directory == '':
-        output_directory = os.path.dirname(args.checkpoint_path)~
+        output_directory = os.path.dirname(args.checkpoint_path)
     else:
         output_directory = args.output_directory
     np.save(output_directory + '/disparities.npy',    disparities)
