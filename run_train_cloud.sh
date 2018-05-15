@@ -1,7 +1,7 @@
 #!/bin/sh
 python monodepth_main.py --mode train \
 --model_name 1day_cloud \
---data_path ~/KITTI/ \
+--data_path /home/shared/KITTI/ \
 --filenames_file utils/filenames/2011_09_29_files.txt \
 --output_directory disparities/ \
 --log_directory logs/ \
