@@ -129,6 +129,12 @@ class MonodepthModel(object):
         p_x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]])
         return slim.conv2d(p_x, num_out_layers, kernel_size, stride, 'VALID', activation_fn=activation_fn)
 
+    def fire(self, x, s11, e11, e33, stride):
+        squeeze = self.conv(x, s11, 1, stride)
+        expand11 = self.conv(squeeze, e11, 1, stride)
+        expand33 = self.conv(squeeze, e33, 3, stride)
+        return np.concatenate((expand11,expand33))
+
     def conv_block(self, x, num_out_layers, kernel_size):
         conv1 = self.conv(x,     num_out_layers, kernel_size, 1)
         conv2 = self.conv(conv1, num_out_layers, kernel_size, 2)
