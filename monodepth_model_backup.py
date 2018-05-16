@@ -129,12 +129,6 @@ class MonodepthModel(object):
         p_x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]])
         return slim.conv2d(p_x, num_out_layers, kernel_size, stride, 'VALID', activation_fn=activation_fn)
 
-    def fire(self, x, s11, e11, e33, stride):
-        squeeze = self.conv(x, s11, 1, stride)
-        expand11 = self.conv(squeeze, e11, 1, stride)
-        expand33 = self.conv(squeeze, e33, 3, stride)
-        return np.concatenate((expand11,expand33))
-
     def conv_block(self, x, num_out_layers, kernel_size):
         conv1 = self.conv(x,     num_out_layers, kernel_size, 1)
         conv2 = self.conv(conv1, num_out_layers, kernel_size, 2)
@@ -173,103 +167,6 @@ class MonodepthModel(object):
         p_x = tf.pad(x, [[0, 0], [1, 1], [1, 1], [0, 0]])
         conv = slim.conv2d_transpose(p_x, num_out_layers, kernel_size, scale, 'SAME')
         return conv[:,3:-1,3:-1,:]
-
-    def fire_module(self, x, squeeze=16, expand1=64, expand3=64):
-        # Fire module, squeeze layer consists of 1x1 conv kernels
-        # Expand layer consists of 1x1 and 3x3 conv kernels
-        conv_sq     = self.conv(x,       squeeze, 1, 1)
-        conv_ex1    = self.conv(conv_sq, expand1,  1, 1)
-        conv_ex3    = self.conv(conv_sq, expand3,  3, 1)
-        out         = tf.concat([conv_ex1, conv_ex3], axis=3)       # Concatenate along the channel axis, may be different axis?
-        return out
-
-    def fire_upsample(self, x, squeeze=16, expand1=64, expand3=64, scale=2):
-        # Fire module for upscaling of the image
-        up_samp     = self.upsample_nn(x, scale)
-        fire        = self.fire_module(up_samp, squeeze, expand1, expand3)
-        return fire
-
-
-    def build_squeezenet(self):
-        if self.params.use_deconv:
-            upconv = self.deconv
-        else:
-            upconv = self.upconv
-
-        with tf.variable_scope('encoder'):
-            conv1       = self.conv(self.model_input,  32, 7, 2)                        
-            fire1b      = self.fire_module(conv1, squeeze=8, expand1=16, expand3=16)
-            fire1c      = self.fire_module(fire1b, squeeze=8, expand1=16, expand3=16)
-            
-            fire2       = self.fire_module(fire1c, squeeze=8, expand1=32, expand3=32)
-            maxpool2    = self.maxpool(fire2, 3)
-            fire2b      = self.fire_module(maxpool2, squeeze=8, expand1=32, expand3=32)
-            fire2c      = self.fire_module(fire2b, squeeze=8, expand1=32, expand3=32)
-
-            fire3       = self.fire_module(fire2c, squeeze=16, expand1=64, expand3=64)
-            maxpool3    = self.maxpool(fire3, 3)
-            fire3b      = self.fire_module(maxpool3, squeeze=16, expand1=64, expand3=64)
-            fire3c      = self.fire_module(fire3b, squeeze=16, expand1=64, expand3=64)
-
-            fire4       = self.fire_module(fire3c, squeeze=32, expand1=128, expand3=128)
-            maxpool4    = self.maxpool(fire4, 3)
-            fire4b      = self.fire_module(maxpool4, squeeze=32, expand1=128, expand3=128)
-            fire4c      = self.fire_module(fire4b, squeeze=32, expand1=128, expand3=128)
-
-            fire5       = self.fire_module(fire4c, squeeze=64, expand1=256, expand3=256)
-            maxpool5    = self.maxpool(fire5, 3)
-            fire5b      = self.fire_module(maxpool5, squeeze=64, expand1=256, expand3=256)
-            fire5c      = self.fire_module(fire5b, squeeze=64, expand1=256, expand3=256)
-
-            fire6       = self.fire_module(fire5c, squeeze=64, expand1=256, expand3=256)
-            maxpool6    = self.maxpool(fire6, 3)
-            fire6b      = self.fire_module(maxpool6, squeeze=64, expand1=256, expand3=256)
-            fire6c      = self.fire_module(fire6b, squeeze=64, expand1=256, expand3=256)
-
-            fire7       = self.fire_module(fire6c, squeeze=64, expand1=256, expand3=256)
-            maxpool7    = self.maxpool(fire7, 3)
-            fire7b      = self.fire_module(maxpool7, squeeze=64, expand1=256, expand3=256)
-            fire7c      = self.fire_module(fire7b, squeeze=64, expand1=256, expand3=256)         
-
-        with tf.variable_scope('skips'):
-            skip1       = fire1c
-            skip2       = fire2c
-            skip3       = fire3c
-            skip4       = fire4c
-            skip5       = fire5c
-            skip6       = fire6c
-        
-        with tf.variable_scope('decoder'):
-            upconv7     = self.fire_upsample(fire7c, squeeze=64, expand1=256, expand3=256)
-            concat7     = tf.concat([upconv7, skip6], 3)
-            iconv7      = self.fire_module(concat7, squeeze=64, expand1=256, expand3=256)
-
-            upconv6     = self.fire_upsample(iconv7, squeeze=64, expand1=256, expand3=256)
-            concat6     = tf.concat([upconv6, skip5], 3)
-            iconv6      = self.fire_module(concat6, squeeze=64, expand1=256, expand3=256)
-
-            upconv5     = self.fire_upsample(iconv6, squeeze=32, expand1=128, expand3=128)
-            concat5     = tf.concat([upconv5, skip4], 3)
-            iconv5      = self.fire_module(concat5, squeeze=32, expand1=128, expand3=128)
-
-            upconv4     = self.fire_upsample(iconv5, squeeze=16, expand1=64, expand3=64)
-            concat4     = tf.concat([upconv4, skip3], 3)
-            iconv4      = self.fire_module(concat4, squeeze=16, expand1=64, expand3=64)
-            self.disp4  = self.get_disp(iconv4)
-
-            upconv3     = self.fire_upsample(iconv4, squeeze=8, expand1=32, expand3=32)
-            concat3     = tf.concat([upconv3, skip2], 3)
-            iconv3      = self.fire_module(concat3, squeeze=8, expand1=32, expand3=32)
-            self.disp3  = self.get_disp(iconv3)
-
-            upconv2     = self.fire_upsample(iconv3, squeeze=8, expand1=16, expand3=16)
-            concat2     = tf.concat([upconv2, skip1], 3)
-            iconv2      = self.fire_module(concat2, squeeze=8, expand1=16, expand3=16)
-            self.disp2  = self.get_disp(iconv2)
-
-            upconv1     = self.fire_upsample(iconv2, squeeze=4, expand1=8, expand3=8)
-            iconv1      = self.fire_upsample(upconv1, squeeze=4, expand1=8, expand3=8)
-            self.disp1  = self.get_disp(iconv1)
 
     def build_vgg(self):
         #set convenience functions
@@ -406,8 +303,6 @@ class MonodepthModel(object):
                     self.build_vgg()
                 elif self.params.encoder == 'resnet50':
                     self.build_resnet50()
-                elif self.params.encoder == 'squeeze_net':
-                    self.build_squeezenet()
                 else:
                     return None
 
@@ -493,5 +388,3 @@ class MonodepthModel(object):
                 tf.summary.image('left',  self.left,   max_outputs=4, collections=self.model_collection)
                 tf.summary.image('right', self.right,  max_outputs=4, collections=self.model_collection)
 
-
-# 512 x 256 input images

@@ -1,1 +1,23 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
 __pycache__/
+*.jpg
+*.npy
+*.png
+virtual_environment.sh
+papers/
+.code-workspace
+.vscode
+squeezenet_example/
+trial.py
+models/
+squeezenet.pdf
+Godard_Paper.pdf
+.idea
+=======
+__pycache__/
+>>>>>>> master
+=======
+__pycache__/
+.idea
+>>>>>>> master
