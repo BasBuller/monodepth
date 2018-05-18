@@ -161,10 +161,11 @@ def train(params):
 
         total_loss = tf.reduce_mean(tower_losses)
 
-        tf.summary.scalar('learning_rate', learning_rate, ['model_0'])
-        tf.summary.scalar('total_loss', total_loss)
-        print(tf.get_collection(tf.GraphKeys.SUMMARIES))
-        summary_op = tf.summary.merge_all()
+        tf.summary.scalar('learning_rate', learning_rate, collections=['model_0'])
+        tf.summary.scalar('total_loss', total_loss, collections=['model_0'])
+        summary_op = tf.summary.merge([
+            tf.summary.merge_all(key=tf.GraphKeys.SUMMARIES),
+            tf.summary.merge_all(key='model_0')], collections='merged')
 
         # SESSION
         config = tf.ConfigProto(allow_soft_placement=True)
