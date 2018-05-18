@@ -24,8 +24,9 @@ def load_weights(weight_path: str) -> np.ndarray:
 
 def save_weights(w: np.ndarray, weight_path: str) -> None:
     path_split  = weight_path.split('/')
-    save_folder = f'/{path_split[1]}/{path_split[2]}/{path_split[3]}/{path_split[4]}/pruned'
-    save_path   = f'{save_folder}/{path_split[-1].split(".")[0]}_pruned.npy'
+    save_folder = f'/{path_split[1]}/{path_split[2]}/{path_split[3]}/{path_split[4]}/{path_split[5]}/pruned'
+    print(save_folder, path_split)
+    save_path   = f'{save_folder}/{path_split[-1].split(".")[0]}.npy'
     if not Path(save_folder).exists():
         Path(save_folder).mkdir(parents=True)
     np.save(save_path, w)

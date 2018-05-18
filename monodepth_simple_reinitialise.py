@@ -51,7 +51,8 @@ def reinitialise_weights(sess, reinitialise_list: list) -> None:
     for name in reinitialise_list:
         weights = np.load(f'{name}.npy')
         split = name.split('/')
-        name = f'model/{split[4]}/{split[5]}/{split[6]}'
+        name = f'model/{split[4]}/{split[5]}/{split[7]}'
+        print(name)
         for v in tf.trainable_variables():
             if v.name == name:
                 print("REPLACING\n", v.name, name)
@@ -95,8 +96,8 @@ def test_simple(params):
     train_saver.restore(sess, restore_path)
 
     # REINITIALISE NEW WEIGHTS BASED ON PRUNING
-    # reinitialise_list = ["/monodepth/models/city2kitti/encoder/Conv_5/weights:0"]
-    # reinitialise_weights(sess, reinitialise_list)
+    reinitialise_list = ["/monodepth/models/city2kitti/encoder/Conv/pruned/weights:0"]
+    reinitialise_weights(sess, reinitialise_list)
 
     disp = sess.run(model.disp_left_est[0], feed_dict={left: input_images})
     disp_pp = post_process_disparity(disp.squeeze()).astype(np.float32)
