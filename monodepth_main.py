@@ -222,7 +222,6 @@ def train(params):
 
         # Save in log directory, as well as in the model directory
         train_saver.save(sess, args.log_directory + '/' + args.model_name + '/' + args.model_name, global_step=num_total_steps)
-        train_saver.save(sess, args.checkpoint_path, global_step=num_total_steps)
 
 def test(params):
     """Test function."""
