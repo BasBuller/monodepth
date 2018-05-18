@@ -162,8 +162,9 @@ def train(params):
         total_loss = tf.reduce_mean(tower_losses)
 
         tf.summary.scalar('learning_rate', learning_rate, ['model_0'])
-        tf.summary.scalar('total_loss', total_loss, ['model_0'])
-        summary_op = tf.summary.merge_all('model_0')
+        tf.summary.scalar('total_loss', total_loss)
+        print(tf.get_collection(tf.GraphKeys.SUMMARIES))
+        summary_op = tf.summary.merge_all()
 
         # SESSION
         config = tf.ConfigProto(allow_soft_placement=True)
@@ -198,21 +199,14 @@ def train(params):
             if args.retrain:
                 sess.run(global_step.assign(0))
 
-        # # INITIALIZE PRUNING MASKS
-        # if args.use_prunable:
-        #
-        #     # Initialize all uninitialized masks used for pruning
-        #     list_of_variables = tf.global_variables()
-        #     uninitialized_variables = sess.run(tf.report_uninitialized_variables(list_of_variables))
-        #     print(uninitialized_variables)
-        #     # sess.run(tf.initialize_variables(uninitialized_variables))
-
         # GO!
         start_step = global_step.eval(session=sess)
         start_time = time.time()
         for step in range(start_step, num_total_steps):
             before_op_time = time.time()
             _, loss_value = sess.run([apply_gradient_op, total_loss])
+            if args.use_prunable:
+                sess.run(mask_update_op)
             duration = time.time() - before_op_time
             if step and step % 100 == 0:
                 examples_per_sec = params.batch_size / duration
