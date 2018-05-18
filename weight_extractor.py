@@ -58,12 +58,13 @@ def weight_extractor(params):
     vars = sess.run(var)
     for i in range(len(names)):
         name = names[i].split('/')
-        save_folder = '{0}/{1}/{2}/'.format(restore_path.split('/')[2],
+        save_folder = '{0}/{1}/{2}/{3}'.format(restore_path.split('/')[2],
                                                 restore_path.split('/')[3],
-                                                name[1])
-        save_path    = '{0}/{1}_{2}.npy'.format(save_folder,
-                                                name[2],
-                                                name[3][:-2])
+                                                name[1],
+                                                name[2])
+        save_path    = '{0}/{1}.npy'.format(save_folder,
+                                                name[3])
+        # print(save_path)
         if not Path(save_folder).exists():
             Path(save_folder).mkdir(parents=True)
         np.save(save_path, vars[i])

@@ -46,6 +46,19 @@ def post_process_disparity(disp):
     r_mask = np.fliplr(l_mask)
     return r_mask * l_disp + l_mask * r_disp + (1.0 - l_mask - r_mask) * m_disp
 
+
+def reinitialise_weights(sess, reinitialise_list: list) -> None:
+    for name in reinitialise_list:
+        weights = np.load(f'{name}.npy')
+        split = name.split('/')
+        name = f'model/{split[4]}/{split[5]}/{split[6]}'
+        for v in tf.trainable_variables():
+            if v.name == name:
+                print("REPLACING\n", v.name, name)
+                sess.run(v.assign(weights))
+    return
+
+
 def test_simple(params):
     """Test function."""
 
@@ -82,12 +95,8 @@ def test_simple(params):
     train_saver.restore(sess, restore_path)
 
     # REINITIALISE NEW WEIGHTS BASED ON PRUNING
-    reinitialise_list = ["model/encoder/Conv_6/weights:0"]
-    for name in reinitialise_list:
-        for v in tf.trainable_variables():
-            if v.name == name:
-                weights = sess.run(v)
-                sess.run(v.assign(np.zeros(v.shape)))
+    # reinitialise_list = ["/monodepth/models/city2kitti/encoder/Conv_5/weights:0"]
+    # reinitialise_weights(sess, reinitialise_list)
 
     disp = sess.run(model.disp_left_est[0], feed_dict={left: input_images})
     disp_pp = post_process_disparity(disp.squeeze()).astype(np.float32)
