@@ -6,6 +6,6 @@ python monodepth_main.py --mode train \
 --use_prunable \
 --output_directory disparities/ \
 --log_directory logs/ \
---checkpoint_path models/model_city2kitti \
+--checkpoint_path /home/shared/models/model_city2kitti \
 --retrain \
 --full_summary
