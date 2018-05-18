@@ -20,6 +20,7 @@ import time
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import tensorflow.contrib.model_pruning as pruning
+from tensorflow.python import pywrap_tensorflow
 
 from monodepth_model import *
 from monodepth_dataloader import *
@@ -72,6 +73,19 @@ def count_text_lines(file_path):
     lines = f.readlines()
     f.close()
     return len(lines)
+
+def print_tensors_in_checkpoint_file(file_name, all_tensors=True):
+
+    var_list = []
+    reader = pywrap_tensorflow.NewCheckpointReader(file_name)
+
+    if all_tensors:
+      var_to_shape_map = reader.get_variable_to_shape_map()
+
+      for key in sorted(var_to_shape_map):
+        var_list.append(key)
+
+    return var_list
 
 def train(params):
     """Training loop."""
@@ -157,7 +171,13 @@ def train(params):
 
         # SAVER
         summary_writer = tf.summary.FileWriter(args.log_directory + '/' + args.model_name, sess.graph)
-        train_saver = tf.train.Saver()
+
+        if args.use_prunable:
+            var_to_restore_names = print_tensors_in_checkpoint_file(args.checkpoint_path.split(".")[0])
+            var_to_restore = [v for v in tf.global_variables() if v.name.split(":")[0] in var_to_restore_names]
+            train_saver = tf.train.Saver(var_to_restore)
+        else:
+            train_saver = tf.train.Saver()
 
         # COUNT PARAMS
         total_num_parameters = 0
@@ -177,6 +197,15 @@ def train(params):
 
             if args.retrain:
                 sess.run(global_step.assign(0))
+
+        # # INITIALIZE PRUNING MASKS
+        # if args.use_prunable:
+        #
+        #     # Initialize all uninitialized masks used for pruning
+        #     list_of_variables = tf.global_variables()
+        #     uninitialized_variables = sess.run(tf.report_uninitialized_variables(list_of_variables))
+        #     print(uninitialized_variables)
+        #     # sess.run(tf.initialize_variables(uninitialized_variables))
 
         # GO!
         start_step = global_step.eval(session=sess)
