@@ -290,7 +290,7 @@ def main(_):
         do_stereo=args.do_stereo,
         wrap_mode=args.wrap_mode,
         use_deconv=args.use_deconv,
-        pruning_hparams=args.pruning_hparams,
+        use_prunable=args.use_prunable,
         alpha_image_loss=args.alpha_image_loss,
         disp_gradient_loss_weight=args.disp_gradient_loss_weight,
         lr_loss_weight=args.lr_loss_weight,

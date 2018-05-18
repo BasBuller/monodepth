@@ -5,6 +5,6 @@ python monodepth_main.py --mode train \
 --filenames_file utils/filenames/kitti_train_files_random_png.txt \
 --output_directory disparities/ \
 --log_directory logs/ \
---checkpoint_path models/city2kitti \
+--checkpoint_path models/model_city2kitti \
 --retrain \
 --full_summary
