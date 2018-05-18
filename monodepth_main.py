@@ -19,6 +19,7 @@ import re
 import time
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
+import tensorflow.contrib.model_pruning as pruning
 
 from monodepth_model import *
 from monodepth_dataloader import *
@@ -27,7 +28,7 @@ from average_gradients import *
 parser = argparse.ArgumentParser(description='Monodepth TensorFlow implementation.')
 
 parser.add_argument('--mode',                      type=str,   help='train or test', default='train')
-parser.add_argument('--model_name',                type=str,   help='model name', default='monodepth')
+parser.add_argument('--model_name',                type=str,   help='model name', required=True)
 parser.add_argument('--encoder',                   type=str,   help='type of encoder, vgg or resnet50', default='vgg')
 parser.add_argument('--dataset',                   type=str,   help='dataset to train on, kitti, or cityscapes', default='kitti')
 parser.add_argument('--data_path',                 type=str,   help='path to the data', required=True)
@@ -43,12 +44,15 @@ parser.add_argument('--disp_gradient_loss_weight', type=float, help='disparity s
 parser.add_argument('--do_stereo',                             help='if set, will train the stereo model', action='store_true')
 parser.add_argument('--wrap_mode',                 type=str,   help='bilinear sampler wrap mode, edge or border', default='border')
 parser.add_argument('--use_deconv',                            help='if set, will use transposed convolutions', action='store_true')
+parser.add_argument('--use_prunable',                          help='if set, will use prunable convolutions', action='store_true')
+parser.add_argument('--pruning_hparams',           type=str,   help='comma separated list of pruning-related hyperparameters', default='')
 parser.add_argument('--num_gpus',                  type=int,   help='number of GPUs to use for training', default=1)
 parser.add_argument('--num_threads',               type=int,   help='number of threads to use for data loading', default=8)
 parser.add_argument('--output_directory',          type=str,   help='output directory for test disparities, if empty outputs to checkpoint folder', default='')
 parser.add_argument('--log_directory',             type=str,   help='directory to save checkpoints and summaries', default='')
 parser.add_argument('--checkpoint_path',           type=str,   help='path to a specific checkpoint to load', default='')
 parser.add_argument('--retrain',                               help='if used with checkpoint_path, will restart training from step zero', action='store_true')
+parser.add_argument('--quantize',                              help='if set, will write a ProtoBuf containing the graph to the checkpoint_path', action='store_true')
 parser.add_argument('--full_summary',                          help='if set, will keep more data for each summary. Warning: the file can become very large', action='store_true')
 
 args = parser.parse_args()
@@ -75,6 +79,25 @@ def train(params):
     with tf.Graph().as_default(), tf.device('/cpu:0'):
 
         global_step = tf.Variable(0, trainable=False)
+
+        # PRUNING
+        if args.use_prunable:
+
+            # Parse pruning hyperparameters
+            pruning_hparams = pruning.get_pruning_hparams().parse(args.pruning_hparams)
+
+            # Create a pruning object using the pruning hyperparameters
+            pruning_obj = pruning.Pruning(pruning_hparams, global_step=global_step)
+
+            # Use the pruning object to add ops to the training graph to update the masks
+            # The conditional_mask_update_op will update the masks only when the
+            # training step is in [begin_pruning_step, end_pruning_step] specified in
+            # the pruning spec proto
+            mask_update_op = pruning_obj.conditional_mask_update_op()
+
+            # Use the pruning object to add summaries to the graph to track the sparsity
+            # of each of the layers
+            pruning_obj.add_pruning_summaries()
 
         # OPTIMIZER
         num_training_samples = count_text_lines(args.filenames_file)
@@ -173,8 +196,9 @@ def train(params):
             if step and step % 10000 == 0:
                 train_saver.save(sess, args.log_directory + '/' + args.model_name + '/model', global_step=step)
 
+        # Save in log directory, as well as in the model directory
         train_saver.save(sess, args.log_directory + '/' + args.model_name + '/model', global_step=num_total_steps)
-        train_saver.save(sess, args.checkpoint_path + '/' + args.model_name, global_step=num_total_steps)
+        train_saver.save(sess, args.checkpoint_path, global_step=num_total_steps)
 
 def test(params):
     """Test function."""
@@ -211,6 +235,27 @@ def test(params):
         restore_path = args.checkpoint_path.split(".")[0]
     train_saver.restore(sess, restore_path)
 
+    if args.quantize:
+
+        # QUANTIZE GRAPH
+        tf.contrib.quantize.create_eval_graph()
+        print('created simulated quantized graph')
+
+        # SAVE QUANTIZED GRAPH
+        with open(args.checkpoint_path + '_quantized.pb', 'w') as f:
+            f.write(str(sess.graph.as_graph_def()))
+        print('saved simulated quantized graph')
+
+        # To convert simulated quantized graph to real one, use command:
+        # (no idea how it works)
+        #
+        # bazel build tensorflow/python/tools:freeze_graph && \
+        # bazel-bin/tensorflow/python/tools/freeze_graph \
+        # --input_graph=model_city2kitty_quantized.pb \
+        # --input_checkpoint=model_city2kitty \
+        # --output_graph=frozen_city2kitty.pb \
+        # --output_node_names=outputs
+
     num_test_samples = count_text_lines(args.filenames_file)
 
     print('now testing {} files'.format(num_test_samples))
@@ -227,7 +272,7 @@ def test(params):
     if args.output_directory == '':
         output_directory = os.path.dirname(args.checkpoint_path)
     else:
-        output_directory = args.output_directory
+        output_directory = args.output_directory + '/' + args.model_name
     np.save(output_directory + '/disparities.npy',    disparities)
     np.save(output_directory + '/disparities_pp.npy', disparities_pp)
 
@@ -245,6 +290,7 @@ def main(_):
         do_stereo=args.do_stereo,
         wrap_mode=args.wrap_mode,
         use_deconv=args.use_deconv,
+        pruning_hparams=args.pruning_hparams,
         alpha_image_loss=args.alpha_image_loss,
         disp_gradient_loss_weight=args.disp_gradient_loss_weight,
         lr_loss_weight=args.lr_loss_weight,

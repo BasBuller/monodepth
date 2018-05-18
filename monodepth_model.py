@@ -18,6 +18,7 @@ from collections import namedtuple
 import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
+import tensorflow.contrib.model_pruning as pruning
 
 from bilinear_sampler import *
 
@@ -30,6 +31,7 @@ monodepth_parameters = namedtuple('parameters',
                         'do_stereo, '
                         'wrap_mode, '
                         'use_deconv, '
+                        'use_prunable, '
                         'alpha_image_loss, '
                         'disp_gradient_loss_weight, '
                         'lr_loss_weight, '
@@ -125,14 +127,33 @@ class MonodepthModel(object):
         return disp
 
     def conv(self, x, num_out_layers, kernel_size, stride, activation_fn=tf.nn.elu):
+        print('using regular conv')  # test for detecting regular convs
         p = np.floor((kernel_size - 1) / 2).astype(np.int32)
         p_x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]])
         return slim.conv2d(p_x, num_out_layers, kernel_size, stride, 'VALID', activation_fn=activation_fn)
+
+    # def conv_prunable(self, x, num_out_layers, kernel_size, stride, activation_fn=tf.nn.elu):
+    #     p = np.floor((kernel_size - 1) / 2).astype(np.int32)
+    #     p_x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]])
+    #     kernel = tf.get_variable('weights', shape=kernel_size.extend([p_x.shape[-1], num_out_layers]), initializer=tf.contrib.layers.xavier_initializer())
+    #     conv = tf.nn.conv2d(p_x, kernel, stride, padding='VALID')
+    #     biases = tf.get_variable('biases', tf.constant(0.0, shape=[num_out_layers], dtype=tf.float32), trainable=True)
+    #     return tf.nn.elu(conv + biases)
+
+    def conv_prunable(self, x, num_out_layers, kernel_size, stride, activation_fn=tf.nn.elu):
+        p = np.floor((kernel_size - 1) / 2).astype(np.int32)
+        p_x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]])
+        return pruning.masked_conv2d(p_x, num_out_layers, kernel_size, stride, 'VALID', activation_fn=activation_fn)
 
     def conv_block(self, x, num_out_layers, kernel_size):
         conv1 = self.conv(x,     num_out_layers, kernel_size, 1)
         conv2 = self.conv(conv1, num_out_layers, kernel_size, 2)
         return conv2
+
+    # def conv_block_prunable(self, x, num_out_layers, kernel_size):
+    #     conv1 = self.conv_prunable(x,     num_out_layers, kernel_size, 1)
+    #     conv2 = self.conv_prunable(conv1, num_out_layers, kernel_size, 2)
+    #     return conv2
 
     def maxpool(self, x, kernel_size):
         p = np.floor((kernel_size - 1) / 2).astype(np.int32)
@@ -163,6 +184,11 @@ class MonodepthModel(object):
         conv = self.conv(upsample, num_out_layers, kernel_size, 1)
         return conv
 
+    # def upconv_prunable(self, x, num_out_layers, kernel_size, scale):
+    #     upsample = self.upsample_nn(x, scale)
+    #     conv = self.conv_prunable(upsample, num_out_layers, kernel_size, 1)
+    #     return conv
+
     def deconv(self, x, num_out_layers, kernel_size, scale):
         p_x = tf.pad(x, [[0, 0], [1, 1], [1, 1], [0, 0]])
         conv = slim.conv2d_transpose(p_x, num_out_layers, kernel_size, scale, 'SAME')
@@ -170,7 +196,11 @@ class MonodepthModel(object):
 
     def build_vgg(self):
         #set convenience functions
-        conv = self.conv
+        if self.params.use_prunable:
+            self.conv = self.conv_prunable
+            conv = self.conv_prunable
+        else:
+            conv = self.conv
         if self.params.use_deconv:
             upconv = self.deconv
         else:
