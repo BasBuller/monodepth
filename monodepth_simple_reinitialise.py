@@ -52,10 +52,9 @@ def reinitialise_weights(sess, reinitialise_list: list) -> None:
         weights = np.load(f'{name}.npy')
         split = name.split('/')
         name = f'model/{split[4]}/{split[5]}/{split[7]}'
-        print(name)
         for v in tf.trainable_variables():
             if v.name == name:
-                print("REPLACING\n", v.name, name)
+                print("Replacing", v.name, name)
                 sess.run(v.assign(weights))
     return
 
@@ -96,7 +95,39 @@ def test_simple(params):
     train_saver.restore(sess, restore_path)
 
     # REINITIALISE NEW WEIGHTS BASED ON PRUNING
-    reinitialise_list = ["/monodepth/models/city2kitti/encoder/Conv/pruned/weights:0"]
+    # List paths of pruned model layers to use as input for reinitialise function
+    reinitialise_list = ["/monodepth/models/city2kitti/encoder/Conv/pruned/weights:0",
+                         "/monodepth/models/city2kitti/encoder/Conv_1/pruned/weights:0",
+                         "/monodepth/models/city2kitti/encoder/Conv_2/pruned/weights:0",
+                         "/monodepth/models/city2kitti/encoder/Conv_3/pruned/weights:0",
+                         "/monodepth/models/city2kitti/encoder/Conv_4/pruned/weights:0",
+                         "/monodepth/models/city2kitti/encoder/Conv_5/pruned/weights:0",
+                         "/monodepth/models/city2kitti/encoder/Conv_6/pruned/weights:0",
+                         "/monodepth/models/city2kitti/encoder/Conv_7/pruned/weights:0",
+                         "/monodepth/models/city2kitti/encoder/Conv_8/pruned/weights:0",
+                         "/monodepth/models/city2kitti/encoder/Conv_9/pruned/weights:0",
+                         "/monodepth/models/city2kitti/encoder/Conv_10/pruned/weights:0",
+                         "/monodepth/models/city2kitti/encoder/Conv_11/pruned/weights:0",
+                         "/monodepth/models/city2kitti/encoder/Conv_12/pruned/weights:0",
+                         "/monodepth/models/city2kitti/encoder/Conv_13/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_1/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_2/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_3/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_4/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_5/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_6/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_7/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_8/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_9/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_10/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_11/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_12/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_13/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_14/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_15/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_16/pruned/weights:0",
+                         "/monodepth/models/city2kitti/decoder/Conv_17/pruned/weights:0"]
     reinitialise_weights(sess, reinitialise_list)
 
     disp = sess.run(model.disp_left_est[0], feed_dict={left: input_images})

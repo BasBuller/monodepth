@@ -25,7 +25,6 @@ def load_weights(weight_path: str) -> np.ndarray:
 def save_weights(w: np.ndarray, weight_path: str) -> None:
     path_split  = weight_path.split('/')
     save_folder = f'/{path_split[1]}/{path_split[2]}/{path_split[3]}/{path_split[4]}/{path_split[5]}/pruned'
-    print(save_folder, path_split)
     save_path   = f'{save_folder}/{path_split[-1].split(".")[0]}.npy'
     if not Path(save_folder).exists():
         Path(save_folder).mkdir(parents=True)
@@ -90,8 +89,8 @@ def eval_sum_l2(w: np.ndarray) -> np.ndarray:
 def prune(w: np.ndarray, eval_array: np.ndarray) -> np.ndarray:
     std     = np.std(eval_array)
     mean    = np.mean(eval_array)
-    k       = 1
-
+    k       = 2
+    print(mean, std)
     print(np.sum(w))
     w_pruned = np.copy(w)
     to_prune_x, to_prune_y = np.where(eval_array < mean - k * std)
@@ -127,7 +126,6 @@ def main():
         'sum_l2\n')
         quit()
     w_pruned = prune(w, eval_array)
-    print(np.sum(w))
     save_weights(w_pruned, args.weight_path)
 
     # print('Evaluation result:\n'
