@@ -134,8 +134,8 @@ def train(params):
         sess = tf.Session(config=config)
 
         # SAVER
-        # summary_writer = tf.summary.FileWriter(args.log_directory + '/' + args.model_name, sess.graph)
-        # train_saver = tf.train.Saver()
+        summary_writer = tf.summary.FileWriter(args.log_directory + '/' + args.model_name, sess.graph)
+        train_saver = tf.train.Saver()
 
         # COUNT PARAMS
         total_num_parameters = 0
