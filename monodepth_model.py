@@ -276,6 +276,7 @@ class MonodepthModel(object):
             upconv1     = self.fire_upsample(iconv2, squeeze=4, expand1=8, expand3=8)
             iconv1      = self.fire_upsample(upconv1, squeeze=4, expand1=8, expand3=8)
             self.disp1  = self.get_disp(iconv1)
+            print(np.shape(upconv1))
             print(np.shape(iconv1))
 
     def build_vgg(self):
