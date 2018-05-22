@@ -209,7 +209,7 @@ def train(params):
             if args.use_prunable:
                 sess.run(mask_update_op)
             duration = time.time() - before_op_time
-            if step and step % 100 == 0:
+            if step and step % 10 == 0:
                 examples_per_sec = params.batch_size / duration
                 time_sofar = (time.time() - start_time) / 3600
                 training_time_left = (num_total_steps / step - 1.0) * time_sofar
