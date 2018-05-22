@@ -7,4 +7,4 @@ python monodepth_main.py --mode train \
 --log_directory logs/ \
 --checkpoint_path models/squeeze_net/model-squeeze_net \
 --num_epochs 1 \
---batch_size 20
+--batch_size 10
