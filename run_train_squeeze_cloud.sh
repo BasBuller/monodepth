@@ -7,6 +7,7 @@ python monodepth_main.py --mode train \
 --output_directory disparities/ \
 --log_directory logs/ \
 --checkpoint_path /home/shared/models/squeeze_net \
+--retrain \
 --num_epochs 1 \
 --batch_size 20 \
 --full_summary
