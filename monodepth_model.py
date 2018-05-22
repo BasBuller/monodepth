@@ -1,4 +1,4 @@
- Copyright UCL Business plc 2017. Patent Pending. All rights reserved.
+# Copyright UCL Business plc 2017. Patent Pending. All rights reserved.
 #
 # The MonoDepth Software is licensed under the terms of the UCLB ACP-A licence
 # which allows for non-commercial use only, the full terms of which are made
