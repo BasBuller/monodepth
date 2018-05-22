@@ -79,7 +79,7 @@ def test_simple(params):
 
     # RESTORE
     restore_path = args.checkpoint_path.split(".")[0]
-    train_saver.restore(sess, restore_path)
+    train_saver.restore(sess, restore_path)     
 
     disp = sess.run(model.disp_left_est[0], feed_dict={left: input_images})
     disp_pp = post_process_disparity(disp.squeeze()).astype(np.float32)
@@ -88,8 +88,7 @@ def test_simple(params):
     output_name = os.path.splitext(os.path.basename(args.image_path))[0]
 
     np.save(os.path.join(output_directory, "{}_disp.npy".format(output_name)), disp_pp)
-    disp_to_img = scipy.misc.imresize(disp_pp.squeeze(), [original_height, original_width])
-    plt.imsave(os.path.join(output_directory, "{}_disp.png".format(output_name)), disp_to_img, cmap='plasma')
+    disp_to_img = scipy.misc.imresize(disp_pp.squeeze(), [original_height, original_width])  
 
     print('done!')
 
