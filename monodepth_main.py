@@ -174,8 +174,8 @@ def train(params):
             if step and step % 10000 == 0:
                 train_saver.save(sess, args.log_directory + '/' + args.model_name + '/model', global_step=step)
 
-        # train_saver.save(sess, args.log_directory + '/' + args.model_name + '/model', global_step=num_total_steps)
-        # train_saver.save(sess, args.checkpoint_path + '/' + args.model_name, global_step=num_total_steps)
+        train_saver.save(sess, args.log_directory + '/' + args.model_name + '/model', global_step=num_total_steps)
+        train_saver.save(sess, args.checkpoint_path + '/' + args.model_name, global_step=num_total_steps)
 
 def test(params):
     """Test function."""
