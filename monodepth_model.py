@@ -182,7 +182,7 @@ class MonodepthModel(object):
             conv3 = self.conv_block(conv2,            128, 3) # H/8
             conv4 = self.conv_block(conv3,            256, 3) # H/16
             conv5 = self.conv_block(conv4,            512, 3) # H/32
-            conv6 = self.conv_block(conv5,            512, 3) # H/64
+            conv6 = self.conv_block(conv5,            512, 3, trainable=False) # H/64
             conv7 = self.conv_block(conv6,            512, 3, trainable=False) # H/128
 
         with tf.variable_scope('skips'):
