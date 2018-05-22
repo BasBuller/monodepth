@@ -1,4 +1,4 @@
-# Copyright UCL Business plc 2017. Patent Pending. All rights reserved.
+ Copyright UCL Business plc 2017. Patent Pending. All rights reserved.
 #
 # The MonoDepth Software is licensed under the terms of the UCLB ACP-A licence
 # which allows for non-commercial use only, the full terms of which are made
@@ -495,4 +495,4 @@ class MonodepthModel(object):
                 tf.summary.image('right', self.right,  max_outputs=4, collections=self.model_collection)
 
 
-# 512 x 256 input images
+# 512 x 256 input ima
