@@ -1,6 +1,6 @@
 #!/bin/sh
 python monodepth_main.py --mode train \
---model_name 5layers_kitti_1day \
+--model_name 7layers_kitti_1day \
 --data_path /home/shared/KITTI/ \
 --filenames_file utils/filenames/2011_09_29_files.txt \
 --output_directory disparities/ \
