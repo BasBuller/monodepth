@@ -110,4 +110,8 @@ if __name__ == '__main__':
                             "a2": a2,
                             "a3": a3})
 
+    write_dir = args.results_path.split("/")[:2]
+    if not os.path.exists("/".join(write_dir)):
+        os.makedirs("/".join(write_dir))
+
     results.to_pickle(args.results_path)
