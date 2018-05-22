@@ -33,6 +33,7 @@ parser.add_argument('--image_path',       type=str,   help='path to the image', 
 parser.add_argument('--checkpoint_path',  type=str,   help='path to a specific checkpoint to load', required=True)
 parser.add_argument('--input_height',     type=int,   help='input height', default=256)
 parser.add_argument('--input_width',      type=int,   help='input width', default=512)
+parser.add_argument('--num_layers',	  type=int,   help='number of encoder/decoder layers (4..7)', default=7)
 
 args = parser.parse_args()
 
@@ -108,7 +109,8 @@ def main(_):
         alpha_image_loss=0,
         disp_gradient_loss_weight=0,
         lr_loss_weight=0,
-        full_summary=False)
+        full_summary=False,
+	num_layers=args.num_layers)
 
     test_simple(params)
 
