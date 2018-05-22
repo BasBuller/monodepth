@@ -244,33 +244,39 @@ class MonodepthModel(object):
             concat6     = tf.concat([upconv6, skip5], 3)
             # concat6     = upconv6
             iconv6      = self.fire_module(concat6, squeeze=64, expand1=256, expand3=256)
+            print(np.shape(iconv6))
 
             upconv5     = self.fire_upsample(iconv6, squeeze=32, expand1=128, expand3=128)
             concat5     = tf.concat([upconv5, skip4], 3)
             # concat5     = upconv5
             iconv5      = self.fire_module(concat5, squeeze=32, expand1=128, expand3=128)
+            print(np.shape(iconv5))
 
             upconv4     = self.fire_upsample(iconv5, squeeze=16, expand1=64, expand3=64)
             concat4     = tf.concat([upconv4, skip3], 3)
             # concat4     = upconv4
             iconv4      = self.fire_module(concat4, squeeze=16, expand1=64, expand3=64)
             self.disp4  = self.get_disp(iconv4)
+            print(np.shape(iconv4))
 
             upconv3     = self.fire_upsample(iconv4, squeeze=8, expand1=32, expand3=32)
             concat3     = tf.concat([upconv3, skip2], 3)
             # concat3     = upconv3
             iconv3      = self.fire_module(concat3, squeeze=8, expand1=32, expand3=32)
             self.disp3  = self.get_disp(iconv3)
+            print(np.shape(iconv3))
 
             upconv2     = self.fire_upsample(iconv3, squeeze=8, expand1=16, expand3=16)
             concat2     = tf.concat([upconv2, skip1], 3)
             # concat2     = upconv2
             iconv2      = self.fire_module(concat2, squeeze=8, expand1=16, expand3=16)
             self.disp2  = self.get_disp(iconv2)
+            print(np.shape(iconv2))
 
             upconv1     = self.fire_upsample(iconv2, squeeze=4, expand1=8, expand3=8)
             iconv1      = self.fire_upsample(upconv1, squeeze=4, expand1=8, expand3=8)
             self.disp1  = self.get_disp(iconv1)
+            print(np.shape(iconv1))
 
     def build_vgg(self):
         #set convenience functions
