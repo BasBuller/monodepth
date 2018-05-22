@@ -207,11 +207,22 @@ def train(params):
         start_time = time.time()
         for step in range(start_step, num_total_steps):
             before_op_time = time.time()
-            _, loss_value = sess.run([apply_gradient_op, total_loss])
-            if args.use_prunable:
+
+            if args.use_prunable and step and step % 10 == 0:
                 sess.run(mask_update_op)
+
+                # Print masks
+                mask1 = tf.reduce_mean(sess.graph.get_tensor_by_name('model/encoder/Conv_2/mask:0'))
+                threshold1 = sess.graph.get_tensor_by_name('model/encoder/Conv_2/threshold:0')
+                mask1_v, threshold1_v = sess.run([mask1, threshold1])
+                print("mask:", mask1_v)
+                print("threshold:", threshold1_v)
+
+            _, loss_value = sess.run([apply_gradient_op, total_loss])
+
             duration = time.time() - before_op_time
-            if step and step % 10 == 0:
+
+            if step and step % 1 == 0:
                 examples_per_sec = params.batch_size / duration
                 time_sofar = (time.time() - start_time) / 3600
                 training_time_left = (num_total_steps / step - 1.0) * time_sofar
@@ -222,7 +233,7 @@ def train(params):
             if step and step % 10000 == 0:
                 train_saver.save(sess, args.log_directory + '/' + args.model_name + '/model', global_step=step)
 
-        # Save in log directory, as well as in the model directory
+        # Save in log directory
         train_saver.save(sess, args.log_directory + '/' + args.model_name + '/' + args.model_name, global_step=num_total_steps)
 
 def test(params):
