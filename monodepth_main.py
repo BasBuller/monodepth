@@ -177,8 +177,10 @@ def train(params):
         if args.use_prunable:
             var_to_restore_names = print_tensors_in_checkpoint_file(args.checkpoint_path.split(".")[0])
             var_to_restore = [v for v in tf.global_variables() if v.name.split(":")[0] in var_to_restore_names]
-            train_saver = tf.train.Saver(var_to_restore)
+            train_loader = tf.train.Saver(var_to_restore)
+            train_saver = tf.train.Saver()
         else:
+            train_loader = tf.train.Saver()
             train_saver = tf.train.Saver()
 
         # COUNT PARAMS
@@ -195,7 +197,7 @@ def train(params):
 
         # LOAD CHECKPOINT IF SET
         if args.checkpoint_path != '':
-            train_saver.restore(sess, args.checkpoint_path.split(".")[0])
+            train_loader.restore(sess, args.checkpoint_path.split(".")[0])
 
             if args.retrain:
                 sess.run(global_step.assign(0))
@@ -243,7 +245,7 @@ def test(params):
     summary_writer.add_graph(sess.graph)
 
     # SAVER
-    train_saver = tf.train.Saver()
+    train_loader = tf.train.Saver()
 
     # INIT
     sess.run(tf.global_variables_initializer())
@@ -256,7 +258,7 @@ def test(params):
         restore_path = tf.train.latest_checkpoint(args.log_directory + '/' + args.model_name)
     else:
         restore_path = args.checkpoint_path.split(".")[0]
-    train_saver.restore(sess, restore_path)
+    train_loader.restore(sess, restore_path)
 
     if args.quantize:
 
