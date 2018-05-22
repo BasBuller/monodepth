@@ -296,6 +296,13 @@ class MonodepthModel(object):
             skip5 = conv5
             skip6 = conv6
 
+            print(np.shape(skip1))
+            print(np.shape(skip2))
+            print(np.shape(skip3))
+            print(np.shape(skip4))
+            print(np.shape(skip5))
+            print(np.shape(skip6))
+
         with tf.variable_scope('decoder'):
             upconv7 = upconv(conv7,  512, 3, 2) #H/64
             concat7 = tf.concat([upconv7, skip6], 3)
