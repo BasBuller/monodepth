@@ -225,39 +225,45 @@ class MonodepthModel(object):
             fire7b      = self.fire_module(maxpool7, squeeze=64, expand1=256, expand3=256)
             fire7c      = self.fire_module(fire7b, squeeze=64, expand1=256, expand3=256)         
 
-        with tf.variable_scope('skips'):
-            skip1       = fire1c
-            skip2       = fire2c
-            skip3       = fire3c
-            skip4       = fire4c
-            skip5       = fire5c
-            skip6       = fire6c
+        # with tf.variable_scope('skips'):
+        #     skip1       = fire1c
+        #     skip2       = fire2c
+        #     skip3       = fire3c
+        #     skip4       = fire4c
+        #     skip5       = fire5c
+        #     skip6       = fire6c
         
         with tf.variable_scope('decoder'):
             upconv7     = self.fire_upsample(fire7c, squeeze=64, expand1=256, expand3=256)
-            concat7     = tf.concat([upconv7, skip6], 3)
+            # concat7     = tf.concat([upconv7, skip6], 3)
+            concat7     = upconv7
             iconv7      = self.fire_module(concat7, squeeze=64, expand1=256, expand3=256)
 
             upconv6     = self.fire_upsample(iconv7, squeeze=64, expand1=256, expand3=256)
-            concat6     = tf.concat([upconv6, skip5], 3)
+            # concat6     = tf.concat([upconv6, skip5], 3)
+            concat6     = upconv6
             iconv6      = self.fire_module(concat6, squeeze=64, expand1=256, expand3=256)
 
             upconv5     = self.fire_upsample(iconv6, squeeze=32, expand1=128, expand3=128)
-            concat5     = tf.concat([upconv5, skip4], 3)
+            # concat5     = tf.concat([upconv5, skip4], 3)
+            concat5     = upconv5
             iconv5      = self.fire_module(concat5, squeeze=32, expand1=128, expand3=128)
 
             upconv4     = self.fire_upsample(iconv5, squeeze=16, expand1=64, expand3=64)
-            concat4     = tf.concat([upconv4, skip3], 3)
+            # concat4     = tf.concat([upconv4, skip3], 3)
+            concat4     = upconv4
             iconv4      = self.fire_module(concat4, squeeze=16, expand1=64, expand3=64)
             self.disp4  = self.get_disp(iconv4)
 
             upconv3     = self.fire_upsample(iconv4, squeeze=8, expand1=32, expand3=32)
-            concat3     = tf.concat([upconv3, skip2], 3)
+            # concat3     = tf.concat([upconv3, skip2], 3)
+            concat3     = upconv3
             iconv3      = self.fire_module(concat3, squeeze=8, expand1=32, expand3=32)
             self.disp3  = self.get_disp(iconv3)
 
             upconv2     = self.fire_upsample(iconv3, squeeze=8, expand1=16, expand3=16)
-            concat2     = tf.concat([upconv2, skip1], 3)
+            # concat2     = tf.concat([upconv2, skip1], 3)
+            concat2     = upconv2
             iconv2      = self.fire_module(concat2, squeeze=8, expand1=16, expand3=16)
             self.disp2  = self.get_disp(iconv2)
 
