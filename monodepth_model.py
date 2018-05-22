@@ -273,8 +273,8 @@ class MonodepthModel(object):
             self.disp2  = self.get_disp(iconv2)
             print(np.shape(iconv2))
 
-            upconv1     = self.fire_upsample(iconv2, squeeze=4, expand1=8, expand3=8)
-            iconv1      = self.fire_upsample(upconv1, squeeze=4, expand1=8, expand3=8)
+            upconv1     = self.fire_upsample(iconv2, squeeze=8, expand1=8, expand3=8)
+            iconv1      = self.fire_module(upconv1, squeeze=8, expand1=8, expand3=8)
             self.disp1  = self.get_disp(iconv1)
             print(np.shape(upconv1))
             print(np.shape(iconv1))
