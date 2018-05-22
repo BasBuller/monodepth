@@ -295,7 +295,10 @@ def test(params):
     if args.output_directory == '':
         output_directory = os.path.dirname(args.checkpoint_path)
     else:
-        output_directory = args.output_directory + '/' + args.model_name
+        output_directory = args.output_directory + args.model_name
+        if not os.path.exists(output_directory):
+            os.makedirs(output_directory)
+
     np.save(output_directory + '/disparities.npy',    disparities)
     np.save(output_directory + '/disparities_pp.npy', disparities_pp)
 
