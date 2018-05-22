@@ -238,7 +238,7 @@ class MonodepthModel(object):
             # concat7     = tf.concat([upconv7, skip6], 3)
             concat7     = upconv7
             iconv7      = self.fire_module(concat7, squeeze=64, expand1=256, expand3=256)
-            print(iconv7.size())
+            print(tf.shape(iconv7))
 
             upconv6     = self.fire_upsample(iconv7, squeeze=64, expand1=256, expand3=256)
             # concat6     = tf.concat([upconv6, skip5], 3)
