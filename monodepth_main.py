@@ -50,6 +50,7 @@ parser.add_argument('--log_directory',             type=str,   help='directory t
 parser.add_argument('--checkpoint_path',           type=str,   help='path to a specific checkpoint to load', default='')
 parser.add_argument('--retrain',                               help='if used with checkpoint_path, will restart training from step zero', action='store_true')
 parser.add_argument('--full_summary',                          help='if set, will keep more data for each summary. Warning: the file can become very large', action='store_true')
+parser.add_argument('--num_layers',                type=int,   help='number of encoder/decoder layers (4..7)', default=7)
 
 args = parser.parse_args()
 
@@ -247,7 +248,8 @@ def main(_):
         alpha_image_loss=args.alpha_image_loss,
         disp_gradient_loss_weight=args.disp_gradient_loss_weight,
         lr_loss_weight=args.lr_loss_weight,
-        full_summary=args.full_summary)
+        full_summary=args.full_summary,
+        num_layers=args.num_layers)
 
     if args.mode == 'train':
         train(params)

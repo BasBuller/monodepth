@@ -33,7 +33,8 @@ monodepth_parameters = namedtuple('parameters',
                         'alpha_image_loss, '
                         'disp_gradient_loss_weight, '
                         'lr_loss_weight, '
-                        'full_summary')
+                        'full_summary, '
+                        'num_layers')
 
 class MonodepthModel(object):
     """monodepth model"""
@@ -176,14 +177,16 @@ class MonodepthModel(object):
         else:
             upconv = self.upconv
 
+        print("Building model with {} layers".format(self.params.num_layers))
+
         with tf.variable_scope('encoder'):
-            conv1 = self.conv_block(self.model_input,  32, 7) # H/2
-            conv2 = self.conv_block(conv1,             64, 5) # H/4
-            conv3 = self.conv_block(conv2,            128, 3) # H/8
-            conv4 = self.conv_block(conv3,            256, 3) # H/16
-            conv5 = self.conv_block(conv4,            512, 3) # H/32
-            conv6 = self.conv_block(conv5,            512, 3, trainable=False) # H/64
-            conv7 = self.conv_block(conv6,            512, 3, trainable=False) # H/128
+            conv1 = self.conv_block(self.model_input,  32, 7, trainable=(self.params.num_layers>=1)) # H/2
+            conv2 = self.conv_block(conv1,             64, 5, trainable=(self.params.num_layers>=2)) # H/4
+            conv3 = self.conv_block(conv2,            128, 3, trainable=(self.params.num_layers>=3)) # H/8
+            conv4 = self.conv_block(conv3,            256, 3, trainable=(self.params.num_layers>=4)) # H/16
+            conv5 = self.conv_block(conv4,            512, 3, trainable=(self.params.num_layers>=5)) # H/32
+            conv6 = self.conv_block(conv5,            512, 3, trainable=(self.params.num_layers>=6)) # H/64
+            conv7 = self.conv_block(conv6,            512, 3, trainable=(self.params.num_layers>=7)) # H/128
 
         with tf.variable_scope('skips'):
             skip1 = conv1
@@ -194,19 +197,22 @@ class MonodepthModel(object):
             skip6 = conv6
 
         with tf.variable_scope('decoder'):
-            upconv7 = upconv(conv7,  512, 3, 2, trainable=False) #H/64
+            upconv7 = upconv(conv7, 512, 3, 2, trainable=(self.params.num_layers>=7))  # H/64
             concat7 = tf.concat([upconv7, skip6], 3)
-            iconv7  = conv(concat7,  512, 3, 1, trainable=False)
+            iconv7  = conv(concat7,  512, 3, 1, trainable=(self.params.num_layers>=7))
 
-            upconv6 = upconv(conv6, 512, 3, 2, trainable=False) #H/32
+            upconv6 = upconv(skip6 if self.params.num_layers == 6 else iconv7,
+                             512, 3, 2, trainable=(self.params.num_layers>=6)) #H/32
             concat6 = tf.concat([upconv6, skip5], 3)
-            iconv6  = conv(concat6,  512, 3, 1, trainable=False)
+            iconv6  = conv(concat6,  512, 3, 1, trainable=(self.params.num_layers>=6))
 
-            upconv5 = upconv(skip5, 256, 3, 2) #H/16
+            upconv5 = upconv(skip5 if self.params.num_layers == 5 else iconv6,
+                             256, 3, 2, trainable=(self.params.num_layers>=5)) #H/16
             concat5 = tf.concat([upconv5, skip4], 3)
-            iconv5  = conv(concat5,  256, 3, 1)
+            iconv5  = conv(concat5,  256, 3, 1, trainable=(self.params.num_layers>=5))
 
-            upconv4 = upconv(iconv5, 128, 3, 2) #H/8
+            upconv4 = upconv(skip4 if self.params.num_layers == 4 else iconv5,
+                             128, 3, 2) #H/8
             concat4 = tf.concat([upconv4, skip3], 3)
             iconv4  = conv(concat4,  128, 3, 1)
             self.disp4 = self.get_disp(iconv4)
