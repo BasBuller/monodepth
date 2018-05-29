@@ -209,7 +209,6 @@ def train(params):
             before_op_time = time.time()
 
             if args.use_prunable and step and step % 10 == 0:
-                sess.run(mask_update_op)
 
                 # Print masks
                 mask1 = tf.reduce_mean(sess.graph.get_tensor_by_name('model/encoder/Conv_2/mask:0'))
@@ -219,6 +218,8 @@ def train(params):
                 print("threshold:", threshold1_v)
 
             _, loss_value = sess.run([apply_gradient_op, total_loss])
+
+            sess.run(mask_update_op)
 
             duration = time.time() - before_op_time
 
