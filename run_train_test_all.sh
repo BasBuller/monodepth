@@ -35,7 +35,7 @@ do
     --log_directory $LOG_DIRECTORY \
     --checkpoint_path ${LOG_DIRECTORY}/${MODEL_NAME}_${LAYERS}layers/model-950 \
     --full_summary \
-    --num_layers 7
+    --num_layers ${LAYERS}
 
     echo "Evaluating ${LAYERS} layers..."
     python utils/evaluate_kitti.py \
