@@ -1,7 +1,7 @@
 #!/bin/sh
 python monodepth_main.py --mode train \
---model_name small_decoder_one \
---encoder small_decoder_one \
+--model_name small_decoder_two \
+--encoder small_decoder_two \
 --data_path /home/shared/KITTI/stereo_2015/ \
 --filenames_file utils/filenames/kitti_stereo_2015_test_files_png.txt \
 --log_directory logs/ \
