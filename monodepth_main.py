@@ -237,6 +237,8 @@ def train(params):
         # Save in log directory
         train_saver.save(sess, args.log_directory + '/' + args.model_name + '/' + args.model_name, global_step=num_total_steps)
 
+        sess.close()
+
 def test(params):
     """Test function."""
 
@@ -317,6 +319,8 @@ def test(params):
     np.save(output_directory + '/disparities_pp.npy', disparities_pp)
 
     print('done.')
+
+    sess.close()
 
 def main(_):
 
