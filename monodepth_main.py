@@ -94,24 +94,7 @@ def train(params):
 
         global_step = tf.Variable(0, trainable=False)
 
-        # PRUNING
-        if args.use_prunable:
 
-            # Parse pruning hyperparameters
-            pruning_hparams = pruning.get_pruning_hparams().parse(args.pruning_hparams)
-
-            # Create a pruning object using the pruning hyperparameters
-            pruning_obj = pruning.Pruning(pruning_hparams, global_step=global_step)
-
-            # Use the pruning object to add ops to the training graph to update the masks
-            # The conditional_mask_update_op will update the masks only when the
-            # training step is in [begin_pruning_step, end_pruning_step] specified in
-            # the pruning spec proto
-            mask_update_op = pruning_obj.conditional_mask_update_op()
-
-            # Use the pruning object to add summaries to the graph to track the sparsity
-            # of each of the layers
-            pruning_obj.add_pruning_summaries()
 
         # OPTIMIZER
         num_training_samples = count_text_lines(args.filenames_file)
@@ -189,6 +172,26 @@ def train(params):
             total_num_parameters += np.array(variable.get_shape().as_list()).prod()
         print("number of trainable parameters: {}".format(total_num_parameters))
 
+        # PRUNING
+        if args.use_prunable:
+
+            # Parse pruning hyperparameters
+            pruning_hparams = pruning.get_pruning_hparams().parse(args.pruning_hparams)
+
+            # Create a pruning object using the pruning hyperparameters
+            pruning_obj = pruning.Pruning(pruning_hparams, global_step=global_step)
+
+            # Use the pruning object to add ops to the training graph to update the masks
+            # The conditional_mask_update_op will update the masks only when the
+            # training step is in [begin_pruning_step, end_pruning_step] specified in
+            # the pruning spec proto
+            # mask_update_op = pruning_obj.conditional_mask_update_op()
+            mask_update_op = pruning_obj.mask_update_op()
+
+            # Use the pruning object to add summaries to the graph to track the sparsity
+            # of each of the layers
+            pruning_obj.add_pruning_summaries()
+
         # INIT
         sess.run(tf.global_variables_initializer())
         sess.run(tf.local_variables_initializer())
@@ -207,11 +210,23 @@ def train(params):
         start_time = time.time()
         for step in range(start_step, num_total_steps):
             before_op_time = time.time()
+
+            if args.use_prunable and step and step % 10 == 0:
+
+                # Print masks
+                mask1 = tf.reduce_mean(sess.graph.get_tensor_by_name('model/encoder/Conv_2/mask:0'))
+                threshold1 = sess.graph.get_tensor_by_name('model/encoder/Conv_2/threshold:0')
+                mask1_v, threshold1_v = sess.run([mask1, threshold1])
+                print("mask:", mask1_v)
+                print("threshold:", threshold1_v)
+                print(sess.run(pruning.get_weight_sparsity()))
+
             _, loss_value = sess.run([apply_gradient_op, total_loss])
-            if args.use_prunable:
-                sess.run(mask_update_op)
+            sess.run(mask_update_op)
+
             duration = time.time() - before_op_time
-            if step and step % 10 == 0:
+
+            if step and step % 1 == 0:
                 examples_per_sec = params.batch_size / duration
                 time_sofar = (time.time() - start_time) / 3600
                 training_time_left = (num_total_steps / step - 1.0) * time_sofar
@@ -222,8 +237,10 @@ def train(params):
             if step and step % 10000 == 0:
                 train_saver.save(sess, args.log_directory + '/' + args.model_name + '/model', global_step=step)
 
-        # Save in log directory, as well as in the model directory
+        # Save in log directory
         train_saver.save(sess, args.log_directory + '/' + args.model_name + '/' + args.model_name, global_step=num_total_steps)
+
+        sess.close()
 
 def test(params):
     """Test function."""
@@ -305,6 +322,8 @@ def test(params):
     np.save(output_directory + '/disparities_pp.npy', disparities_pp)
 
     print('done.')
+
+    sess.close()
 
 def main(_):
 
