@@ -94,24 +94,7 @@ def train(params):
 
         global_step = tf.Variable(0, trainable=False)
 
-        # PRUNING
-        if args.use_prunable:
 
-            # Parse pruning hyperparameters
-            pruning_hparams = pruning.get_pruning_hparams().parse(args.pruning_hparams)
-
-            # Create a pruning object using the pruning hyperparameters
-            pruning_obj = pruning.Pruning(pruning_hparams, global_step=global_step)
-
-            # Use the pruning object to add ops to the training graph to update the masks
-            # The conditional_mask_update_op will update the masks only when the
-            # training step is in [begin_pruning_step, end_pruning_step] specified in
-            # the pruning spec proto
-            mask_update_op = pruning_obj.conditional_mask_update_op()
-
-            # Use the pruning object to add summaries to the graph to track the sparsity
-            # of each of the layers
-            pruning_obj.add_pruning_summaries()
 
         # OPTIMIZER
         num_training_samples = count_text_lines(args.filenames_file)
@@ -189,6 +172,26 @@ def train(params):
             total_num_parameters += np.array(variable.get_shape().as_list()).prod()
         print("number of trainable parameters: {}".format(total_num_parameters))
 
+        # PRUNING
+        if args.use_prunable:
+
+            # Parse pruning hyperparameters
+            pruning_hparams = pruning.get_pruning_hparams().parse(args.pruning_hparams)
+
+            # Create a pruning object using the pruning hyperparameters
+            pruning_obj = pruning.Pruning(pruning_hparams, global_step=global_step)
+
+            # Use the pruning object to add ops to the training graph to update the masks
+            # The conditional_mask_update_op will update the masks only when the
+            # training step is in [begin_pruning_step, end_pruning_step] specified in
+            # the pruning spec proto
+            # mask_update_op = pruning_obj.conditional_mask_update_op()
+            mask_update_op = pruning_obj.mask_update_op()
+
+            # Use the pruning object to add summaries to the graph to track the sparsity
+            # of each of the layers
+            pruning_obj.add_pruning_summaries()
+
         # INIT
         sess.run(tf.global_variables_initializer())
         sess.run(tf.local_variables_initializer())
@@ -216,9 +219,9 @@ def train(params):
                 mask1_v, threshold1_v = sess.run([mask1, threshold1])
                 print("mask:", mask1_v)
                 print("threshold:", threshold1_v)
+                print(sess.run(pruning.get_weight_sparsity()))
 
             _, loss_value = sess.run([apply_gradient_op, total_loss])
-
             sess.run(mask_update_op)
 
             duration = time.time() - before_op_time
