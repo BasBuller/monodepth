@@ -807,6 +807,8 @@ class MonodepthModel(object):
                     self.build_small_decoder_one()
                 elif self.params.encoder == 'small_decoder_two':
                     self.build_small_decoder_two()
+                elif self.params.encoder == 'squeeze_net_old':
+                    self.build_squeezenet_old()
                 else:
                     return None
 
