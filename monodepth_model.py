@@ -227,10 +227,10 @@ class MonodepthModel(object):
             fire7c      = self.fire_module(fire7b, squeeze=64, expand1=256, expand3=256)         
 
         with tf.variable_scope('skips'):
-            skip1       = fire1c
-            skip2       = fire2c
-            skip3       = fire3c
-            skip4       = fire4c
+            skip1       = fire1b
+            skip2       = fire2b
+            skip3       = fire3b
+            skip4       = fire4b
             skip5       = fire5c
             skip6       = fire6c
         
