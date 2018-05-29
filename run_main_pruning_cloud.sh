@@ -1,6 +1,6 @@
 #!/bin/sh
 python monodepth_main.py --mode test \
---model_name insert_model_name_095 \
+--model_name insert_model_name_05 \
 --data_path /home/shared/KITTI/stereo_2015/ \
 --filenames_file utils/filenames/kitti_stereo_2015_test_files_png.txt \
 --use_prunable \
