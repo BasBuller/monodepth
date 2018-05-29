@@ -131,14 +131,6 @@ class MonodepthModel(object):
     #     p_x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]])
     #     return slim.conv2d(p_x, num_out_layers, kernel_size, stride, 'VALID', activation_fn=activation_fn)
 
-    # def conv_prunable(self, x, num_out_layers, kernel_size, stride, activation_fn=tf.nn.elu):
-    #     p = np.floor((kernel_size - 1) / 2).astype(np.int32)
-    #     p_x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]])
-    #     kernel = tf.get_variable('weights', shape=kernel_size.extend([p_x.shape[-1], num_out_layers]), initializer=tf.contrib.layers.xavier_initializer())
-    #     conv = tf.nn.conv2d(p_x, kernel, stride, padding='VALID')
-    #     biases = tf.get_variable('biases', tf.constant(0.0, shape=[num_out_layers], dtype=tf.float32), trainable=True)
-    #     return tf.nn.elu(conv + biases)
-
     def conv(self, x, num_out_layers, kernel_size, stride, activation_fn=tf.nn.elu):
         p = np.floor((kernel_size - 1) / 2).astype(np.int32)
         p_x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]])
