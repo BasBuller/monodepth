@@ -90,6 +90,7 @@ def train(params):
 
         opt_step = tf.train.AdamOptimizer(learning_rate)
 
+        print("model: {}".format(params.encoder))
         print("total number of samples: {}".format(num_training_samples))
         print("total number of steps: {}".format(num_total_steps))
 

@@ -183,8 +183,90 @@ class MonodepthModel(object):
         fire        = self.fire_module(up_samp, squeeze, expand1, expand3)
         return fire
 
+# Own models
 
     def build_squeezenet(self):
+        if self.params.use_deconv:
+            upconv = self.deconv
+        else:
+            upconv = self.upconv
+
+        with tf.variable_scope('encoder'):
+            conv1       = self.conv(self.model_input,  32, 7, 2)                        
+            fire1b      = self.fire_module(conv1, squeeze=8, expand1=16, expand3=16)
+            fire1c      = self.fire_module(fire1b, squeeze=8, expand1=24, expand3=24)
+            
+            fire2       = self.fire_module(fire1c, squeeze=8, expand1=32, expand3=32)
+            maxpool2    = self.maxpool(fire2, 3)
+            fire2b      = self.fire_module(maxpool2, squeeze=8, expand1=32, expand3=32)
+            fire2c      = self.fire_module(fire2b, squeeze=12, expand1=48, expand3=48)
+
+            fire3       = self.fire_module(fire2c, squeeze=16, expand1=64, expand3=64)
+            maxpool3    = self.maxpool(fire3, 3)
+            fire3b      = self.fire_module(maxpool3, squeeze=16, expand1=64, expand3=64)
+            fire3c      = self.fire_module(fire3b, squeeze=24, expand1=96, expand3=96)
+
+            fire4       = self.fire_module(fire3c, squeeze=32, expand1=128, expand3=128)
+            maxpool4    = self.maxpool(fire4, 3)
+            fire4b      = self.fire_module(maxpool4, squeeze=32, expand1=128, expand3=128)
+            fire4c      = self.fire_module(fire4b, squeeze=48, expand1=192, expand3=192)
+
+            fire5       = self.fire_module(fire4c, squeeze=64, expand1=256, expand3=256)
+            maxpool5    = self.maxpool(fire5, 3)
+            fire5b      = self.fire_module(maxpool5, squeeze=64, expand1=256, expand3=256)
+            fire5c      = self.fire_module(fire5b, squeeze=64, expand1=256, expand3=256)
+
+            fire6       = self.fire_module(fire5c, squeeze=64, expand1=256, expand3=256)
+            maxpool6    = self.maxpool(fire6, 3)
+            fire6b      = self.fire_module(maxpool6, squeeze=64, expand1=256, expand3=256)
+            fire6c      = self.fire_module(fire6b, squeeze=64, expand1=256, expand3=256)
+
+            fire7       = self.fire_module(fire6c, squeeze=64, expand1=256, expand3=256)
+            maxpool7    = self.maxpool(fire7, 3)
+            fire7b      = self.fire_module(maxpool7, squeeze=64, expand1=256, expand3=256)
+            fire7c      = self.fire_module(fire7b, squeeze=64, expand1=256, expand3=256)         
+
+        with tf.variable_scope('skips'):
+            skip1       = fire1c
+            skip2       = fire2c
+            skip3       = fire3c
+            skip4       = fire4c
+            skip5       = fire5c
+            skip6       = fire6c
+        
+        with tf.variable_scope('decoder'):
+            upconv7     = self.fire_upsample(fire7c, squeeze=64, expand1=256, expand3=256)
+            concat7     = tf.concat([upconv7, skip6], 3)
+            iconv7      = self.fire_module(concat7, squeeze=64, expand1=256, expand3=256)
+
+            upconv6     = self.fire_upsample(iconv7, squeeze=64, expand1=256, expand3=256)
+            concat6     = tf.concat([upconv6, skip5], 3)
+            iconv6      = self.fire_module(concat6, squeeze=64, expand1=256, expand3=256)
+
+            upconv5     = self.fire_upsample(iconv6, squeeze=48, expand1=192, expand3=192)
+            concat5     = tf.concat([upconv5, skip4], 3)
+            iconv5      = self.fire_module(concat5, squeeze=32, expand1=128, expand3=128)
+
+            upconv4     = self.fire_upsample(iconv5, squeeze=24, expand1=96, expand3=96)
+            concat4     = tf.concat([upconv4, skip3], 3)
+            iconv4      = self.fire_module(concat4, squeeze=16, expand1=64, expand3=64)
+            self.disp4  = self.get_disp(iconv4)
+
+            upconv3     = self.fire_upsample(iconv4, squeeze=12, expand1=48, expand3=48)
+            concat3     = tf.concat([upconv3, skip2], 3)
+            iconv3      = self.fire_module(concat3, squeeze=8, expand1=32, expand3=32)
+            self.disp3  = self.get_disp(iconv3)
+
+            upconv2     = self.fire_upsample(iconv3, squeeze=8, expand1=16, expand3=16)
+            concat2     = tf.concat([upconv2, skip1], 3)
+            iconv2      = self.fire_module(concat2, squeeze=8, expand1=16, expand3=16)
+            self.disp2  = self.get_disp(iconv2)
+
+            upconv1     = self.fire_upsample(iconv2, squeeze=8, expand1=8, expand3=8)
+            iconv1      = self.fire_module(upconv1, squeeze=8, expand1=8, expand3=8)
+            self.disp1  = self.get_disp(iconv1)
+
+    def build_squeezenet_old(self):
         if self.params.use_deconv:
             upconv = self.deconv
         else:
@@ -264,6 +346,321 @@ class MonodepthModel(object):
             upconv1     = self.fire_upsample(iconv2, squeeze=8, expand1=8, expand3=8)
             iconv1      = self.fire_module(upconv1, squeeze=8, expand1=8, expand3=8)
             self.disp1  = self.get_disp(iconv1)
+
+    def build_delayed_pool_one(self):
+        if self.params.use_deconv:
+            upconv = self.deconv
+        else:
+            upconv = self.upconv
+
+        with tf.variable_scope('encoder'):
+            conv1       = self.conv(self.model_input,  32, 7, 2)                        
+            fire1b      = self.fire_module(conv1, squeeze=8, expand1=16, expand3=16)
+            fire1c      = self.fire_module(fire1b, squeeze=8, expand1=16, expand3=16)
+            
+            fire2       = self.fire_module(fire1c, squeeze=8, expand1=32, expand3=32)
+            maxpool2    = self.maxpool(fire2, 3)
+            fire2b      = self.fire_module(maxpool2, squeeze=8, expand1=32, expand3=32)
+            fire2c      = self.fire_module(fire2b, squeeze=12, expand1=48, expand3=48)
+            fire2d      = self.fire_module(fire2c, squeeze=12, expand1=48, expand3=48)
+
+            fire3       = self.fire_module(fire2d, squeeze=16, expand1=64, expand3=64)
+            maxpool3    = self.maxpool(fire3, 3)
+            fire3b      = self.fire_module(maxpool3, squeeze=16, expand1=64, expand3=64)
+            fire3c      = self.fire_module(fire3b, squeeze=24, expand1=92, expand3=92)
+            fire3d      = self.fire_module(fire3c, squeeze=24, expand1=92, expand3=92)
+
+            fire4       = self.fire_module(fire3d, squeeze=32, expand1=128, expand3=128)
+            maxpool4    = self.maxpool(fire4, 3)
+            fire4b      = self.fire_module(maxpool4, squeeze=32, expand1=128, expand3=128)
+            fire4c      = self.fire_module(fire4b, squeeze=48, expand1=192, expand3=192)
+
+            fire5       = self.fire_module(fire4c, squeeze=64, expand1=256, expand3=256)
+            maxpool5    = self.maxpool(fire5, 3)
+            fire5b      = self.fire_module(maxpool5, squeeze=64, expand1=256, expand3=256)
+            fire5c      = self.fire_module(fire5b, squeeze=64, expand1=256, expand3=256)
+
+            fire6       = self.fire_module(fire5c, squeeze=64, expand1=256, expand3=256)
+            maxpool6    = self.maxpool(fire6, 3)
+            fire6b      = self.fire_module(maxpool6, squeeze=64, expand1=256, expand3=256)
+
+            fire7       = self.fire_module(fire6b, squeeze=64, expand1=256, expand3=256)
+            maxpool7    = self.maxpool(fire7, 3)
+            fire7b      = self.fire_module(maxpool7, squeeze=64, expand1=256, expand3=256)        
+
+        with tf.variable_scope('skips'):
+            skip1       = fire1c
+            skip2       = fire2b
+            skip3       = fire3b
+            skip4       = fire4b
+            skip5       = fire5b
+            skip6       = fire6b
+        
+        with tf.variable_scope('decoder'):
+            upconv7     = self.fire_upsample(fire7b, squeeze=64, expand1=256, expand3=256)
+            concat7     = tf.concat([upconv7, skip6], 3)
+            iconv7      = self.fire_module(concat7, squeeze=64, expand1=256, expand3=256)
+
+            upconv6     = self.fire_upsample(iconv7, squeeze=64, expand1=256, expand3=256)
+            concat6     = tf.concat([upconv6, skip5], 3)
+            iconv6      = self.fire_module(concat6, squeeze=64, expand1=256, expand3=256)
+
+            upconv5     = self.fire_upsample(iconv6, squeeze=32, expand1=128, expand3=128)
+            concat5     = tf.concat([upconv5, skip4], 3)
+            iconv5      = self.fire_module(concat5, squeeze=32, expand1=128, expand3=128)
+
+            upconv4     = self.fire_upsample(iconv5, squeeze=16, expand1=64, expand3=64)
+            concat4     = tf.concat([upconv4, skip3], 3)
+            iconv4      = self.fire_module(concat4, squeeze=16, expand1=64, expand3=64)
+            self.disp4  = self.get_disp(iconv4)
+
+            upconv3     = self.fire_upsample(iconv4, squeeze=8, expand1=32, expand3=32)
+            concat3     = tf.concat([upconv3, skip2], 3)
+            iconv3      = self.fire_module(concat3, squeeze=8, expand1=32, expand3=32)
+            self.disp3  = self.get_disp(iconv3)
+
+            upconv2     = self.fire_upsample(iconv3, squeeze=8, expand1=16, expand3=16)
+            concat2     = tf.concat([upconv2, skip1], 3)
+            iconv2      = self.fire_module(concat2, squeeze=8, expand1=16, expand3=16)
+            self.disp2  = self.get_disp(iconv2)
+
+            upconv1     = self.fire_upsample(iconv2, squeeze=8, expand1=8, expand3=8)
+            iconv1      = self.fire_module(upconv1, squeeze=8, expand1=8, expand3=8)
+            self.disp1  = self.get_disp(iconv1)
+
+    def build_delayed_pool_two(self):
+        if self.params.use_deconv:
+            upconv = self.deconv
+        else:
+            upconv = self.upconv
+
+        with tf.variable_scope('encoder'):
+            conv1       = self.conv(self.model_input,  32, 7, 2)                        
+            fire1b      = self.fire_module(conv1, squeeze=8, expand1=16, expand3=16)
+            fire1c      = self.fire_module(fire1b, squeeze=8, expand1=16, expand3=16)
+            
+            fire2       = self.fire_module(fire1c, squeeze=8, expand1=32, expand3=32)
+            maxpool2    = self.maxpool(fire2, 3)
+            fire2b      = self.fire_module(maxpool2, squeeze=8, expand1=32, expand3=32)
+            fire2c      = self.fire_module(fire2b, squeeze=12, expand1=48, expand3=48)
+            fire2d      = self.fire_module(fire2c, squeeze=12, expand1=48, expand3=48)
+            fire2e      = self.fire_module(fire2d, squeeze=12, expand1=48, expand3=48)
+
+            fire3       = self.fire_module(fire2e, squeeze=16, expand1=64, expand3=64)
+            maxpool3    = self.maxpool(fire3, 3)
+            fire3b      = self.fire_module(maxpool3, squeeze=16, expand1=64, expand3=64)
+            fire3c      = self.fire_module(fire3b, squeeze=24, expand1=92, expand3=92)
+            fire3d      = self.fire_module(fire3c, squeeze=24, expand1=92, expand3=92)
+
+            fire4       = self.fire_module(fire3d, squeeze=32, expand1=128, expand3=128)
+            maxpool4    = self.maxpool(fire4, 3)
+            fire4b      = self.fire_module(maxpool4, squeeze=32, expand1=128, expand3=128)
+            fire4c      = self.fire_module(fire4b, squeeze=48, expand1=192, expand3=192)
+
+            fire5       = self.fire_module(fire4c, squeeze=64, expand1=256, expand3=256)
+            maxpool5    = self.maxpool(fire5, 3)
+            fire5b      = self.fire_module(maxpool5, squeeze=64, expand1=256, expand3=256)
+
+            fire6       = self.fire_module(fire5b, squeeze=64, expand1=256, expand3=256)
+            maxpool6    = self.maxpool(fire6, 3)
+            fire6b      = self.fire_module(maxpool6, squeeze=64, expand1=256, expand3=256)
+
+            fire7       = self.fire_module(fire6b, squeeze=64, expand1=256, expand3=256)
+            maxpool7    = self.maxpool(fire7, 3)
+            fire7b      = self.fire_module(maxpool7, squeeze=64, expand1=256, expand3=256)        
+
+        with tf.variable_scope('skips'):
+            skip1       = fire1c
+            skip2       = fire2b
+            skip3       = fire3b
+            skip4       = fire4b
+            skip5       = fire5b
+            skip6       = fire6b
+        
+        with tf.variable_scope('decoder'):
+            upconv7     = self.fire_upsample(fire7b, squeeze=64, expand1=256, expand3=256)
+            concat7     = tf.concat([upconv7, skip6], 3)
+            iconv7      = self.fire_module(concat7, squeeze=64, expand1=256, expand3=256)
+
+            upconv6     = self.fire_upsample(iconv7, squeeze=64, expand1=256, expand3=256)
+            concat6     = tf.concat([upconv6, skip5], 3)
+            iconv6      = self.fire_module(concat6, squeeze=64, expand1=256, expand3=256)
+
+            upconv5     = self.fire_upsample(iconv6, squeeze=32, expand1=128, expand3=128)
+            concat5     = tf.concat([upconv5, skip4], 3)
+            iconv5      = self.fire_module(concat5, squeeze=32, expand1=128, expand3=128)
+
+            upconv4     = self.fire_upsample(iconv5, squeeze=16, expand1=64, expand3=64)
+            concat4     = tf.concat([upconv4, skip3], 3)
+            iconv4      = self.fire_module(concat4, squeeze=16, expand1=64, expand3=64)
+            self.disp4  = self.get_disp(iconv4)
+
+            upconv3     = self.fire_upsample(iconv4, squeeze=8, expand1=32, expand3=32)
+            concat3     = tf.concat([upconv3, skip2], 3)
+            iconv3      = self.fire_module(concat3, squeeze=8, expand1=32, expand3=32)
+            self.disp3  = self.get_disp(iconv3)
+
+            upconv2     = self.fire_upsample(iconv3, squeeze=8, expand1=16, expand3=16)
+            concat2     = tf.concat([upconv2, skip1], 3)
+            iconv2      = self.fire_module(concat2, squeeze=8, expand1=16, expand3=16)
+            self.disp2  = self.get_disp(iconv2)
+
+            upconv1     = self.fire_upsample(iconv2, squeeze=8, expand1=8, expand3=8)
+            iconv1      = self.fire_module(upconv1, squeeze=8, expand1=8, expand3=8)
+            self.disp1  = self.get_disp(iconv1)
+
+    def build_small_decoder_one(self):
+        if self.params.use_deconv:
+            upconv = self.deconv
+        else:
+            upconv = self.upconv
+
+        with tf.variable_scope('encoder'):
+            conv1       = self.conv(self.model_input,  32, 7, 2)                        
+            fire1b      = self.fire_module(conv1, squeeze=8, expand1=16, expand3=16)
+            fire1c      = self.fire_module(fire1b, squeeze=8, expand1=16, expand3=16)
+            
+            fire2       = self.fire_module(fire1c, squeeze=8, expand1=32, expand3=32)
+            maxpool2    = self.maxpool(fire2, 3)
+            fire2b      = self.fire_module(maxpool2, squeeze=8, expand1=32, expand3=32)
+            fire2c      = self.fire_module(fire2b, squeeze=8, expand1=32, expand3=32)
+
+            fire3       = self.fire_module(fire2c, squeeze=16, expand1=64, expand3=64)
+            maxpool3    = self.maxpool(fire3, 3)
+            fire3b      = self.fire_module(maxpool3, squeeze=16, expand1=64, expand3=64)
+            fire3c      = self.fire_module(fire3b, squeeze=16, expand1=64, expand3=64)
+
+            fire4       = self.fire_module(fire3c, squeeze=32, expand1=128, expand3=128)
+            maxpool4    = self.maxpool(fire4, 3)
+            fire4b      = self.fire_module(maxpool4, squeeze=32, expand1=128, expand3=128)
+            fire4c      = self.fire_module(fire4b, squeeze=32, expand1=128, expand3=128)
+
+            fire5       = self.fire_module(fire4c, squeeze=64, expand1=256, expand3=256)
+            maxpool5    = self.maxpool(fire5, 3)
+            fire5b      = self.fire_module(maxpool5, squeeze=64, expand1=256, expand3=256)
+            fire5c      = self.fire_module(fire5b, squeeze=64, expand1=256, expand3=256)
+
+            fire6       = self.fire_module(fire5c, squeeze=64, expand1=256, expand3=256)
+            maxpool6    = self.maxpool(fire6, 3)
+            fire6b      = self.fire_module(maxpool6, squeeze=64, expand1=256, expand3=256)
+            fire6c      = self.fire_module(fire6b, squeeze=64, expand1=256, expand3=256)
+
+            fire7       = self.fire_module(fire6c, squeeze=64, expand1=256, expand3=256)
+            maxpool7    = self.maxpool(fire7, 3)
+            fire7b      = self.fire_module(maxpool7, squeeze=64, expand1=256, expand3=256)
+            fire7c      = self.fire_module(fire7b, squeeze=64, expand1=256, expand3=256)         
+
+        with tf.variable_scope('skips'):
+            skip1       = fire1c
+            skip2       = fire2c
+            skip3       = fire3c
+            skip4       = fire4c
+            skip5       = fire5c
+            skip6       = fire6c
+        
+        with tf.variable_scope('decoder'):
+            upconv7     = self.fire_upsample(fire7c, squeeze=64, expand1=256, expand3=256)
+            concat7     = tf.concat([upconv7, skip6], 3)
+            iconv7      = self.fire_module(concat7, squeeze=64, expand1=256, expand3=256)
+
+            upconv6     = self.fire_upsample(iconv7, squeeze=64, expand1=256, expand3=256)
+            concat6     = tf.concat([upconv6, skip5], 3)
+            iconv6      = self.fire_module(concat6, squeeze=64, expand1=256, expand3=256)
+
+            upconv5     = self.fire_upsample(iconv6, squeeze=48, expand1=192, expand3=192)
+            concat5     = tf.concat([upconv5, skip4], 3)
+            iconv5      = self.fire_module(concat5, squeeze=32, expand1=128, expand3=128)
+
+            upconv4     = self.fire_upsample(iconv5, squeeze=16, expand1=64, expand3=64)
+            concat4     = tf.concat([upconv4, skip3], 3)
+            self.disp4  = self.get_disp(concat4)
+
+            upconv3     = self.fire_upsample(concat4, squeeze=8, expand1=32, expand3=32)
+            concat3     = tf.concat([upconv3, skip2], 3)
+            self.disp3  = self.get_disp(concat3)
+
+            upconv2     = self.fire_upsample(concat3, squeeze=8, expand1=16, expand3=16)
+            concat2     = tf.concat([upconv2, skip1], 3)
+            self.disp2  = self.get_disp(concat2)
+
+            upconv1     = self.fire_upsample(concat2, squeeze=8, expand1=8, expand3=8)
+            self.disp1  = self.get_disp(upconv1)
+
+    def build_small_decoder_two(self):
+        if self.params.use_deconv:
+            upconv = self.deconv
+        else:
+            upconv = self.upconv
+
+        with tf.variable_scope('encoder'):
+            conv1       = self.conv(self.model_input,  32, 7, 2)                        
+            fire1b      = self.fire_module(conv1, squeeze=8, expand1=16, expand3=16)
+            fire1c      = self.fire_module(fire1b, squeeze=8, expand1=16, expand3=16)
+            
+            fire2       = self.fire_module(fire1c, squeeze=8, expand1=32, expand3=32)
+            maxpool2    = self.maxpool(fire2, 3)
+            fire2b      = self.fire_module(maxpool2, squeeze=8, expand1=32, expand3=32)
+            fire2c      = self.fire_module(fire2b, squeeze=8, expand1=32, expand3=32)
+
+            fire3       = self.fire_module(fire2c, squeeze=16, expand1=64, expand3=64)
+            maxpool3    = self.maxpool(fire3, 3)
+            fire3b      = self.fire_module(maxpool3, squeeze=16, expand1=64, expand3=64)
+            fire3c      = self.fire_module(fire3b, squeeze=16, expand1=64, expand3=64)
+
+            fire4       = self.fire_module(fire3c, squeeze=32, expand1=128, expand3=128)
+            maxpool4    = self.maxpool(fire4, 3)
+            fire4b      = self.fire_module(maxpool4, squeeze=32, expand1=128, expand3=128)
+            fire4c      = self.fire_module(fire4b, squeeze=32, expand1=128, expand3=128)
+
+            fire5       = self.fire_module(fire4c, squeeze=64, expand1=256, expand3=256)
+            maxpool5    = self.maxpool(fire5, 3)
+            fire5b      = self.fire_module(maxpool5, squeeze=64, expand1=256, expand3=256)
+            fire5c      = self.fire_module(fire5b, squeeze=64, expand1=256, expand3=256)
+
+            fire6       = self.fire_module(fire5c, squeeze=64, expand1=256, expand3=256)
+            maxpool6    = self.maxpool(fire6, 3)
+            fire6b      = self.fire_module(maxpool6, squeeze=64, expand1=256, expand3=256)
+            fire6c      = self.fire_module(fire6b, squeeze=64, expand1=256, expand3=256)
+
+            fire7       = self.fire_module(fire6c, squeeze=64, expand1=256, expand3=256)
+            maxpool7    = self.maxpool(fire7, 3)
+            fire7b      = self.fire_module(maxpool7, squeeze=64, expand1=256, expand3=256)
+            fire7c      = self.fire_module(fire7b, squeeze=64, expand1=256, expand3=256)         
+
+        with tf.variable_scope('skips'):
+            skip1       = fire1c
+            skip2       = fire2c
+            skip3       = fire3c
+            skip4       = fire4c
+            skip5       = fire5c
+            skip6       = fire6c
+        
+        with tf.variable_scope('decoder'):
+            upconv7     = self.fire_upsample(fire7c, squeeze=64, expand1=256, expand3=256)
+            concat7     = tf.concat([upconv7, skip6], 3)
+
+            upconv6     = self.fire_upsample(concat7, squeeze=64, expand1=256, expand3=256)
+            concat6     = tf.concat([upconv6, skip5], 3)
+
+            upconv5     = self.fire_upsample(concat6, squeeze=32, expand1=128, expand3=128)
+            concat5     = tf.concat([upconv5, skip4], 3)
+
+            upconv4     = self.fire_upsample(concat5, squeeze=16, expand1=64, expand3=64)
+            concat4     = tf.concat([upconv4, skip3], 3)
+            self.disp4  = self.get_disp(concat4)
+
+            upconv3     = self.fire_upsample(concat4, squeeze=8, expand1=32, expand3=32)
+            concat3     = tf.concat([upconv3, skip2], 3)
+            self.disp3  = self.get_disp(concat3)
+
+            upconv2     = self.fire_upsample(concat3, squeeze=8, expand1=16, expand3=16)
+            concat2     = tf.concat([upconv2, skip1], 3)
+            self.disp2  = self.get_disp(concat2)
+
+            upconv1     = self.fire_upsample(concat2, squeeze=8, expand1=8, expand3=8)
+            self.disp1  = self.get_disp(upconv1)
+
+# Monodepth models
 
     def build_vgg(self):
         #set convenience functions
@@ -402,6 +799,14 @@ class MonodepthModel(object):
                     self.build_resnet50()
                 elif self.params.encoder == 'squeeze_net':
                     self.build_squeezenet()
+                elif self.params.encoder == 'delayed_pool_one':
+                    self.build_delayed_pool_one()
+                elif self.params.encoder == 'delayed_pool_two':
+                    self.build_delayed_pool_two()
+                elif self.params.encoder == 'small_decoder_one':
+                    self.build_small_decoder_one()
+                elif self.params.encoder == 'small_decoder_two':
+                    self.build_small_decoder_two()
                 else:
                     return None
 
