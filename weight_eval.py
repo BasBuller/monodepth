@@ -1,11 +1,12 @@
 # Script to evaluate the weights for layers in a convolutional network.
 #
 # by M.J.Mollema
-# TODO: remove corresponding biases of removed weights
+# TODO: REMOVE CORRESPONDING INPUT LAYER WHEN DELETING OUTPUT OF PREVIOUS LAYER
 
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from pathlib import Path
 plt.switch_backend('TkAgg')
 
@@ -25,14 +26,48 @@ def load_weights(weight_path: str) -> np.ndarray:
     return w
 
 
-def save_weights(w: np.ndarray, weight_path: str) -> None:
-    path_split  = weight_path.split('/')
-    save_folder = f'{args.output_dir}/pruned/{path_split[-3]}/{path_split[-2]}'
-    save_path   = f'{save_folder}/{path_split[-1].split(".")[0]}.npy'
+def load_biases(weight_path: str) -> np.ndarray:
+    bias_path = Path(f'{weight_path.parent}/biases:0.npy')
+    b = np.load(bias_path)
+    return b
+
+
+def save_weights_biases(wb: np.ndarray, weight_path: str, output_dir: str) -> None:
+    if len(wb.shape) == 4:
+        filename = 'weights:0.npy'
+    elif len(wb.shape) == 1:
+        filename = 'bias:0.npy'
+    else:
+        raise ValueError(f'Got {len(wb.shape)} dimensions, expected either 4 for weights '
+        f'array or 1 for bias array')
+    parts = weight_path.parts
+    save_folder = f'{output_dir}/{args.eval_type}_std_{args.num_std}/' \
+                  f'{parts[-3]}/{parts[-2]}'
+    save_path = Path(f'{save_folder}/{filename}')
     if not Path(save_folder).exists():
         Path(save_folder).mkdir(parents=True)
-    np.save(save_path, w)
-    print(f'Pruned weights saved to: {save_path}\n')
+    np.save(save_path, wb)
+    print(f'Pruned {filename} saved to: {save_path}')
+    return None
+
+
+def save_sizes(w: np.ndarray, weight_path: str, output_dir: str) -> None:
+    save_path = f'{output_dir}/{args.eval_type}_std_{args.num_std}/sizes.csv'
+    try:
+        df = pd.read_csv(save_path)
+    except:
+        df = pd.DataFrame(columns=['en/de', 'Layer', 'Shape'])
+    parts = weight_path.parts
+    en_de = parts[-3]
+    layer = parts[-2]
+
+    idx = df.index[(df['en/de'] == en_de) & (df['Layer'] == layer)]
+    data = {'en/de': en_de, 'Layer': layer, 'Shape': w.shape[-1]}
+    if idx.empty:
+        df = df.append(data, ignore_index=True)
+    else:
+        df.iloc[idx[0]] = data
+    df.to_csv(save_path, index=False)
     return None
 
 
@@ -84,20 +119,30 @@ def eval_sum_l2(w: np.ndarray) -> np.ndarray:
     return sum_l2_array
 
 
-def prune(w: np.ndarray, eval_array: np.ndarray) -> np.ndarray:
+def prune(w: np.ndarray, b: np.ndarray, eval_array: np.ndarray) -> np.ndarray:
     std     = np.std(eval_array)
     mean    = np.mean(eval_array)
     k       = args.num_std
-    to_prune = np.where(eval_array < mean - k * std)
+
+    if len(eval_array) == 2:
+        to_prune = []
+    else:
+        to_prune = np.where(eval_array < mean - k * std)
     w_pruned = np.delete(w, to_prune, -1)
+    b_pruned = np.delete(b, to_prune, -1)
 
     print(f'\nMean = {mean:.5f}\nSTD  = {std:.5f}')
-    print(f'# removed filters: {len(to_prune[0])}\n')
-    return w_pruned
+    print(f'Removed filters: {len(to_prune[0])} ({len(to_prune[0])/len(eval_array)*100}%)\n')
+    return w_pruned, b_pruned
 
 
 def main():
-    w = load_weights(args.weight_path)
+    weight_path = Path(args.weight_path)
+    output_dir = Path(args.output_dir)
+
+    w = load_weights(weight_path)
+    b = load_biases(weight_path)
+
     if args.eval_type == 'mean':
         eval_array = eval_mean(w)
     elif args.eval_type == 'mean_abs':
@@ -120,8 +165,12 @@ def main():
         'sum_abs\n'
         'sum_l2\n')
         quit()
-    w_pruned = prune(w, eval_array)
-    save_weights(w_pruned, args.weight_path)
+
+    w_pruned, b_pruned = prune(w, b, eval_array)
+
+    save_weights_biases(w_pruned, weight_path, output_dir)
+    save_weights_biases(b_pruned, weight_path, output_dir)
+    save_sizes(w_pruned, weight_path, output_dir)
 
 
 if __name__ == '__main__':

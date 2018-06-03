@@ -22,7 +22,7 @@ import tensorflow.contrib.slim as slim
 import scipy.misc
 import matplotlib.pyplot as plt
 
-from monodepth_model import *
+from monodepth_model_pruned import *
 from monodepth_dataloader import *
 from average_gradients import *
 
@@ -33,6 +33,7 @@ parser.add_argument('--image_path',       type=str,   help='path to the image', 
 parser.add_argument('--checkpoint_path',  type=str,   help='path to a specific checkpoint to load', required=True)
 parser.add_argument('--input_height',     type=int,   help='input height', default=256)
 parser.add_argument('--input_width',      type=int,   help='input width', default=512)
+parser.add_argument('--pruned_sizes_path', type=str, help='csv file containing pruned sizes', required=True)
 
 args = parser.parse_args()
 
@@ -49,12 +50,14 @@ def post_process_disparity(disp):
 
 def reinitialise_weights(sess, reinitialise_list: list) -> None:
     for name in reinitialise_list:
-        weights = np.load(f'{name}.npy')
+        weights = np.load(f'{name}/weights:0.npy')
+        biases = np.load(f'{name}/bias:0.npy')
         split = name.split('/')
-        name = f'model/{split[4]}/{split[5]}/{split[7]}'
+        w_name = f'model/{split[-2]}/{split[-1]}/weights:0'
         for v in tf.trainable_variables():
-            if v.name == name:
-                print("Replacing", v.name, name)
+            if v.name == w_name:
+                print("Replacing", v.name, w_name)
+                print(v)
                 sess.run(v.assign(weights))
     return
 
@@ -63,7 +66,7 @@ def test_simple(params):
     """Test function."""
 
     left  = tf.placeholder(tf.float32, [2, args.input_height, args.input_width, 3])
-    model = MonodepthModel(params, "test", left, None)
+    model = MonodepthModel(params, "test", left, None, sizes=args.pruned_sizes_path)
 
     input_image = scipy.misc.imread(args.image_path, mode="RGB")
     original_height, original_width, num_channels = input_image.shape
@@ -72,7 +75,7 @@ def test_simple(params):
     input_images = np.stack((input_image, np.fliplr(input_image)), 0)
 
     # SUMMARY
-    writer = tf.summary.FileWriter('~/Projects/DeepLearningProject/monodepth/graphs/simple')
+    writer = tf.summary.FileWriter('/monodepth/graphs/simple')
 
     # SESSION
     config = tf.ConfigProto(allow_soft_placement=True)
@@ -92,42 +95,42 @@ def test_simple(params):
 
     # RESTORE
     restore_path = args.checkpoint_path.split(".")[0]
-    train_saver.restore(sess, restore_path)
+    # train_saver.restore(sess, restore_path)
 
     # REINITIALISE NEW WEIGHTS BASED ON PRUNING
     # List paths of pruned model layers to use as input for reinitialise function
-    reinitialise_list = ["/monodepth/models/city2kitti/encoder/Conv/pruned/weights:0",
-                         "/monodepth/models/city2kitti/encoder/Conv_1/pruned/weights:0",
-                         "/monodepth/models/city2kitti/encoder/Conv_2/pruned/weights:0",
-                         "/monodepth/models/city2kitti/encoder/Conv_3/pruned/weights:0",
-                         "/monodepth/models/city2kitti/encoder/Conv_4/pruned/weights:0",
-                         "/monodepth/models/city2kitti/encoder/Conv_5/pruned/weights:0",
-                         "/monodepth/models/city2kitti/encoder/Conv_6/pruned/weights:0",
-                         "/monodepth/models/city2kitti/encoder/Conv_7/pruned/weights:0",
-                         "/monodepth/models/city2kitti/encoder/Conv_8/pruned/weights:0",
-                         "/monodepth/models/city2kitti/encoder/Conv_9/pruned/weights:0",
-                         "/monodepth/models/city2kitti/encoder/Conv_10/pruned/weights:0",
-                         "/monodepth/models/city2kitti/encoder/Conv_11/pruned/weights:0",
-                         "/monodepth/models/city2kitti/encoder/Conv_12/pruned/weights:0",
-                         "/monodepth/models/city2kitti/encoder/Conv_13/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_1/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_2/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_3/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_4/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_5/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_6/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_7/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_8/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_9/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_10/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_11/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_12/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_13/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_14/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_15/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_16/pruned/weights:0",
-                         "/monodepth/models/city2kitti/decoder/Conv_17/pruned/weights:0"]
+    reinitialise_list = ["/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/encoder/Conv",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/encoder/Conv_1",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/encoder/Conv_2",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/encoder/Conv_3",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/encoder/Conv_4",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/encoder/Conv_5",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/encoder/Conv_6",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/encoder/Conv_7",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/encoder/Conv_8",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/encoder/Conv_9",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/encoder/Conv_10",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/encoder/Conv_11",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/encoder/Conv_12",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/encoder/Conv_13",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_1",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_2",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_3",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_4",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_5",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_6",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_7",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_8",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_9",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_10",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_11",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_12",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_13",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_14",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_15",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_16",
+                         "/monodepth/models/city2kitti/pruned/mean_abs_std_2.0/decoder/Conv_17",]
     reinitialise_weights(sess, reinitialise_list)
 
     disp = sess.run(model.disp_left_est[0], feed_dict={left: input_images})
