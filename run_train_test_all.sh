@@ -27,6 +27,7 @@ do
     --data_path  $TRAIN_DATA_PATH \
     --filenames_file $TRAIN_FILENAMES_FILE \
     --output_directory disparities/ \
+    --log_directory $LOG_DIRECTORY \
     --full_summary \
     --num_layers ${LAYERS}
 
