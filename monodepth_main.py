@@ -213,13 +213,10 @@ def train(params):
         # GO!
         start_step = global_step.eval(session=sess)
         start_time = time.time()
+
         for step in range(start_step, num_total_steps):
+
             before_op_time = time.time()
-
-            if args.use_prunable and step and step % 10 == 0:
-
-                # Print weight sparsity
-                print(f"weight sparsity: {sess.run(pruning.get_weight_sparsity())}")
 
             _, loss_value = sess.run([apply_gradient_op, total_loss])
 
@@ -235,6 +232,11 @@ def train(params):
                 training_time_left = (num_total_steps / step - 1.0) * time_sofar
                 print_string = 'batch {:>6} | examples/s: {:4.2f} | loss: {:.5f} | time elapsed: {:.2f}h | time left: {:.2f}h'
                 print(print_string.format(step, examples_per_sec, loss_value, time_sofar, training_time_left))
+
+                if args.use_prunable:
+                    # Print weight sparsity
+                    print(f"weight sparsity: {sess.run(pruning.get_weight_sparsity())}")
+
                 summary_str = sess.run(summary_op)
                 summary_writer.add_summary(summary_str, global_step=step)
 
