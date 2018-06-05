@@ -7,7 +7,7 @@ MODEL_NAME=monodepth_kitti
 LOG_DIRECTORY=logs/
 
 #TRAIN_FILENAMES_FILE=utils/filenames/2011_09_29_files.txt
-TRAIN_FILENAMES_FILE=utils/filenames/kitti_train_files.txt
+TRAIN_FILENAMES_FILE=utils/filenames/kitti_train_files_png.txt
 #CHECKPOINT_PATH=/home/shared/models/model_kitti
 #TRAIN_DATA_PATH=/home/shared/KITTI/
 TRAIN_DATA_PATH=/home/shared/data/KITTI/
@@ -15,7 +15,7 @@ TRAIN_DATA_PATH=/home/shared/data/KITTI/
 #TEST_DATA_PATH=/home/shared/KITTI/stereo_2015/
 TEST_DATA_PATH=/home/shared/data/KITTI/
 #TEST_FILENAMES_FILE=utils/filenames/kitti_stereo_2015_test_files_png.txt
-TEST_FILENAMES_FILE=utils/filenames/kitti_test_files.txt
+TEST_FILENAMES_FILE=utils/filenames/kitti_test_files_png.txt
 
 RESULTS_PATH=/home/shared/results/results.pickle
 
