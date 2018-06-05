@@ -6,6 +6,8 @@
 #
 # For any other use of the software not covered by the UCLB ACP-A Licence,
 # please contact info@uclb.com
+#
+# TODO: Load pruned biases
 
 from __future__ import absolute_import, division, print_function
 
@@ -51,7 +53,7 @@ def post_process_disparity(disp):
 def reinitialise_weights(sess, reinitialise_list: list) -> None:
     for name in reinitialise_list:
         weights = np.load(f'{name}/weights:0.npy')
-        biases = np.load(f'{name}/bias:0.npy')
+        biases = np.load(f'{name}/biases:0.npy')
         split = name.split('/')
         w_name = f'model/{split[-2]}/{split[-1]}/weights:0'
         for v in tf.trainable_variables():

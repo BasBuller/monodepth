@@ -18,7 +18,6 @@ from monodepth_model import *
 parser = argparse.ArgumentParser(description='Weight extraction for monodepth model.')
 
 parser.add_argument('--encoder',          type=str,   help='type of encoder, vgg or resnet50', default='vgg')
-# parser.add_argument('--image_path',       type=str,   help='path to the image', required=True)
 parser.add_argument('--checkpoint_path',  type=str,   help='path to a specific checkpoint to load', required=True)
 parser.add_argument('--input_height',     type=int,   help='input height', default=256)
 parser.add_argument('--input_width',      type=int,   help='input width', default=512)
@@ -41,7 +40,7 @@ def weight_extractor(params):
     sess.run(tf.global_variables_initializer())
     sess.run(tf.local_variables_initializer())
     coordinator = tf.train.Coordinator()
-    threads = tf.train.start_queue_runners(sess=sess, coord=coordinator)
+    # threads = tf.train.start_queue_runners(sess=sess, coord=coordinator)
 
     # RESTORE
     restore_path = args.checkpoint_path.split(".")[0]
@@ -49,12 +48,40 @@ def weight_extractor(params):
 
     # SAVE WEIGHTS TO .npy FILES
     var, names = [], []
+    keep_weights = ["model/encoder/Conv_1/weights:0",
+                    "model/encoder/Conv_3/weights:0",
+                    "model/encoder/Conv_5/weights:0",
+                    "model/encoder/Conv_7/weights:0",
+                    "model/encoder/Conv_9/weights:0",
+                    "model/encoder/Conv_11/weights:0",
+                    "model/encoder/Conv_13/weights:0",
+                    "model/decoder/Conv/weights:0",
+                    "model/decoder/Conv_2/weights:0",
+                    "model/decoder/Conv_4/weights:0",
+                    "model/decoder/Conv_6/weights:0",
+                    "model/decoder/Conv_9/weights:0",
+                    "model/decoder/Conv_12/weights:0",
+                    "model/decoder/Conv_15/weights:0",
+                    "model/encoder/Conv_1/biases:0",
+                    "model/encoder/Conv_3/biases:0",
+                    "model/encoder/Conv_5/biases:0",
+                    "model/encoder/Conv_7/biases:0",
+                    "model/encoder/Conv_9/biases:0",
+                    "model/encoder/Conv_11/biases:0",
+                    "model/encoder/Conv_13/biases:0",
+                    "model/decoder/Conv/biases:0",
+                    "model/decoder/Conv_2/biases:0",
+                    "model/decoder/Conv_4/biases:0",
+                    "model/decoder/Conv_6/biases:0",
+                    "model/decoder/Conv_9/biases:0",
+                    "model/decoder/Conv_12/biases:0",
+                    "model/decoder/Conv_15/biases:0"]
     for v in tf.trainable_variables():
-        # if v.name == "model/encoder/Conv_6/weights:0":
-        #     var.append(v)
-        #     names.append(v.name)
-        var.append(v)
-        names.append(v.name)
+        if v.name in keep_weights:
+            var.append(v)
+            names.append(v.name)
+        # var.append(v)
+        # names.append(v.name)
     vars = sess.run(var)
     for i in range(len(names)):
         name = names[i].split('/')
@@ -64,7 +91,6 @@ def weight_extractor(params):
                                                 name[2])
         save_path    = '{0}/{1}.npy'.format(save_folder,
                                                 name[3])
-        # print(save_path)
         if not Path(save_folder).exists():
             Path(save_folder).mkdir(parents=True)
         np.save(save_path, vars[i])
