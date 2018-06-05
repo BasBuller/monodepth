@@ -94,8 +94,6 @@ def train(params):
 
         global_step = tf.Variable(0, trainable=False)
 
-
-
         # OPTIMIZER
         num_training_samples = count_text_lines(args.filenames_file)
 
@@ -109,8 +107,8 @@ def train(params):
 
         opt_step = tf.train.AdamOptimizer(learning_rate)
 
-        print("total number of samples: {}".format(num_training_samples))
-        print("total number of steps: {}".format(num_total_steps))
+        print(f"total number of samples: {num_training_samples}")
+        print(f"total number of steps: {num_total_steps}")
 
         dataloader = MonodepthDataloader(args.data_path, args.filenames_file, params, args.dataset, args.mode)
         left  = dataloader.left_image_batch
@@ -146,9 +144,9 @@ def train(params):
 
         tf.summary.scalar('learning_rate', learning_rate, collections=['model_0'])
         tf.summary.scalar('total_loss', total_loss, collections=['model_0'])
-        summary_op = tf.summary.merge([
-            tf.summary.merge_all(key=tf.GraphKeys.SUMMARIES),
-            tf.summary.merge_all(key='model_0')], collections='merged')
+        # summary_op = tf.summary.merge([
+        #     tf.summary.merge_all(key=tf.GraphKeys.SUMMARIES),
+        #     tf.summary.merge_all(key='model_0')], collections='merged')
 
         # SESSION
         config = tf.ConfigProto(allow_soft_placement=True)
@@ -170,7 +168,9 @@ def train(params):
         total_num_parameters = 0
         for variable in tf.trainable_variables():
             total_num_parameters += np.array(variable.get_shape().as_list()).prod()
-        print("number of trainable parameters: {}".format(total_num_parameters))
+
+        print(f"number of trainable parameters: {total_num_parameters}")
+        print(f"trainable parameters: {tf.trainable_variables()}")
 
         # PRUNING
         if args.use_prunable:
@@ -191,6 +191,11 @@ def train(params):
             # Use the pruning object to add summaries to the graph to track the sparsity
             # of each of the layers
             pruning_obj.add_pruning_summaries()
+
+        # DEFINE SUMMARY OP
+        summary_op = tf.summary.merge([
+            tf.summary.merge_all(key=tf.GraphKeys.SUMMARIES),
+            tf.summary.merge_all(key='model_0')], collections='merged')
 
         # INIT
         sess.run(tf.global_variables_initializer())
@@ -213,20 +218,18 @@ def train(params):
 
             if args.use_prunable and step and step % 10 == 0:
 
-                # Print masks
-                mask1 = tf.reduce_mean(sess.graph.get_tensor_by_name('model/encoder/Conv_2/mask:0'))
-                threshold1 = sess.graph.get_tensor_by_name('model/encoder/Conv_2/threshold:0')
-                mask1_v, threshold1_v = sess.run([mask1, threshold1])
-                print("mask:", mask1_v)
-                print("threshold:", threshold1_v)
-                print(sess.run(pruning.get_weight_sparsity()))
+                # Print weight sparsity
+                print(f"weight sparsity: {sess.run(pruning.get_weight_sparsity())}")
 
             _, loss_value = sess.run([apply_gradient_op, total_loss])
-            sess.run(mask_update_op)
+
+            if args.use_prunable:
+                sess.run(mask_update_op)
 
             duration = time.time() - before_op_time
 
-            if step and step % 1 == 0:
+            if step and step % 100 == 0:
+
                 examples_per_sec = params.batch_size / duration
                 time_sofar = (time.time() - start_time) / 3600
                 training_time_left = (num_total_steps / step - 1.0) * time_sofar
@@ -234,8 +237,10 @@ def train(params):
                 print(print_string.format(step, examples_per_sec, loss_value, time_sofar, training_time_left))
                 summary_str = sess.run(summary_op)
                 summary_writer.add_summary(summary_str, global_step=step)
+
             if step and step % 10000 == 0:
-                train_saver.save(sess, args.log_directory + '/' + args.model_name + '/model', global_step=step)
+
+                train_saver.save(sess, args.log_directory + '/' + args.model_name + '/' + args.model_name, global_step=step)
 
         # Save in log directory
         train_saver.save(sess, args.log_directory + '/' + args.model_name + '/' + args.model_name, global_step=num_total_steps)

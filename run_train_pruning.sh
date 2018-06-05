@@ -1,8 +1,8 @@
 #!/bin/sh
 python monodepth_main.py --mode train \
 --model_name test_print \
---data_path /media/huis/EMDrive/DeepLearningData/KITTI/ \
---filenames_file utils/filenames/kitti_train_files_random_png.txt \
+--data_path ~/Downloads/stereo_2015/ \
+--filenames_file utils/filenames/kitti_stereo_2015_train_files_png.txt \
 --num_epochs 1 \
 --use_prunable \
 --output_directory disparities/ \
