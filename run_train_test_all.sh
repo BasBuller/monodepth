@@ -6,14 +6,20 @@
 MODEL_NAME=monodepth_kitti
 LOG_DIRECTORY=logs/
 
-TRAIN_FILENAMES_FILE=utils/filenames/2011_09_29_files.txt
-CHECKPOINT_PATH=/home/shared/models/model_kitti
-TRAIN_DATA_PATH=/home/shared/KITTI/
-TEST_DATA_PATH=/home/shared/KITTI/stereo_2015/
-TEST_FILENAMES_FILE=utils/filenames/kitti_stereo_2015_test_files_png.txt
+#TRAIN_FILENAMES_FILE=utils/filenames/2011_09_29_files.txt
+TRAIN_FILENAMES_FILE=utils/filenames/kitti_train_files.txt
+#CHECKPOINT_PATH=/home/shared/models/model_kitti
+#TRAIN_DATA_PATH=/home/shared/KITTI/
+TRAIN_DATA_PATH=/home/shared/data/KITTI/
+
+#TEST_DATA_PATH=/home/shared/KITTI/stereo_2015/
+TEST_DATA_PATH=/home/shared/data/KITTI/
+#TEST_FILENAMES_FILE=utils/filenames/kitti_stereo_2015_test_files_png.txt
+TEST_FILENAMES_FILE=utils/filenames/kitti_test_files.txt
+
 RESULTS_PATH=/home/shared/results/results.pickle
 
-for LAYERS in 7 6 5 4
+for LAYERS in 6 5 4
 do
     echo "Training ${LAYERS} layers..."
     python monodepth_main.py --mode train \
@@ -21,9 +27,6 @@ do
     --data_path  $TRAIN_DATA_PATH \
     --filenames_file $TRAIN_FILENAMES_FILE \
     --output_directory disparities/ \
-    --log_directory $LOG_DIRECTORY \
-    --checkpoint_path $CHECKPOINT_PATH \
-    --retrain \
     --full_summary \
     --num_layers ${LAYERS}
 
