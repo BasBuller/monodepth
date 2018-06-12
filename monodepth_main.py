@@ -167,7 +167,7 @@ def train(params):
             total_num_parameters += np.array(variable.get_shape().as_list()).prod()
 
         print(f"number of trainable parameters: {total_num_parameters}")
-        print(f"trainable parameters: {tf.trainable_variables()}")
+        # print(f"trainable parameters: {tf.trainable_variables()}")
 
         # PRUNING
         if args.use_prunable:
