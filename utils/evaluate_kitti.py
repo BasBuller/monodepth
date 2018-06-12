@@ -3,12 +3,14 @@ import cv2
 import argparse
 import pandas as pd
 from evaluation_utils import *
+import os.path
 
 parser = argparse.ArgumentParser(description='Evaluation on the KITTI dataset')
 parser.add_argument('--split',               type=str,   help='data split, kitti or eigen',         required=True)
 parser.add_argument('--predicted_disp_path', type=str,   help='path to estimated disparities',      required=True)
 parser.add_argument('--results_path',        type=str,   help='path to write results to (pickle)',  required=True)
 parser.add_argument('--gt_path',             type=str,   help='path to ground truth disparities',   required=True)
+parser.add_argument('--description',         type=str,   help='description of the input',           required=True)
 parser.add_argument('--min_depth',           type=float, help='minimum depth for evaluation',        default=1e-3)
 parser.add_argument('--max_depth',           type=float, help='maximum depth for evaluation',        default=80)
 parser.add_argument('--eigen_crop',                      help='if set, crops according to Eigen NIPS14',   action='store_true')
@@ -102,16 +104,25 @@ if __name__ == '__main__':
     print("{:10.4f}, {:10.4f}, {:10.3f}, {:10.3f}, {:10.3f}, {:10.3f}, {:10.3f}, {:10.3f}".format(abs_rel.mean(), sq_rel.mean(), rms.mean(), log_rms.mean(), d1_all.mean(), a1.mean(), a2.mean(), a3.mean()))
 
     # Save to pickle file
-    results = pd.DataFrame({"abs_rel": abs_rel,
-                            "sq_rel": sq_rel,
-                            "rms": rms,
-                            "log_rms": log_rms,
-                            "a1": a1,
-                            "a2": a2,
-                            "a3": a3})
-
-    write_dir = args.results_path.split("/")[:2]
-    if not os.path.exists("/".join(write_dir)):
-        os.makedirs("/".join(write_dir))
-
+    if os.path.isfile(args.results_path):
+        results = pd.read_pickle(args.results_path)
+        results_new = pd.DataFrame({"abs_rel": abs_rel.mean(),
+                                "sq_rel": sq_rel.mean(),
+                                "rms": rms.mean(),
+                                "log_rms": log_rms.mean(),
+                                "a1": a1.mean(),
+                                "a2": a2.mean(),
+                                "a3": a3.mean(),
+                                },index=[args.description])
+        results = results.append(results_new)
+    else:
+        results = pd.DataFrame({"abs_rel": abs_rel.mean(),
+                                "sq_rel": sq_rel.mean(),
+                                "rms": rms.mean(),
+                                "log_rms": log_rms.mean(),
+                                "a1": a1.mean(),
+                                "a2": a2.mean(),
+                                "a3": a3.mean(),
+                                },index=[args.description])
+    print(results)
     results.to_pickle(args.results_path)

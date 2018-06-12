@@ -242,7 +242,8 @@ def train(params):
                 train_saver.save(sess, args.log_directory + '/' + args.model_name + '/' + args.model_name, global_step=step)
 
         # Save in log directory
-        train_saver.save(sess, args.log_directory + '/' + args.model_name + '/' + args.model_name, global_step=num_total_steps)
+        # train_saver.save(sess, args.log_directory + '/' + args.model_name + '/' + args.model_name, global_step=num_total_steps)
+        train_saver.save(sess, args.log_directory + '/' + args.model_name + '/' + args.model_name)
 
 def test(params):
     """Test function."""
@@ -292,6 +293,7 @@ def test(params):
     print('done.')
 
     print('writing disparities.')
+
     if args.output_directory == '':
         output_directory = os.path.dirname(args.checkpoint_path)
     else:
