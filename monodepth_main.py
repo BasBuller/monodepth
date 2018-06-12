@@ -144,9 +144,6 @@ def train(params):
 
         tf.summary.scalar('learning_rate', learning_rate, collections=['model_0'])
         tf.summary.scalar('total_loss', total_loss, collections=['model_0'])
-        # summary_op = tf.summary.merge([
-        #     tf.summary.merge_all(key=tf.GraphKeys.SUMMARIES),
-        #     tf.summary.merge_all(key='model_0')], collections='merged')
 
         # SESSION
         config = tf.ConfigProto(allow_soft_placement=True)
@@ -281,27 +278,6 @@ def test(params):
     else:
         restore_path = args.checkpoint_path.split(".")[0]
     train_loader.restore(sess, restore_path)
-
-    if args.quantize:
-
-        # QUANTIZE GRAPH
-        tf.contrib.quantize.create_eval_graph()
-        print('created simulated quantized graph')
-
-        # SAVE QUANTIZED GRAPH
-        with open(args.checkpoint_path + '_quantized.pb', 'w') as f:
-            f.write(str(sess.graph.as_graph_def()))
-        print('saved simulated quantized graph')
-
-        # To convert simulated quantized graph to real one, use command:
-        # (no idea how it works)
-        #
-        # bazel build tensorflow/python/tools:freeze_graph && \
-        # bazel-bin/tensorflow/python/tools/freeze_graph \
-        # --input_graph=model_city2kitty_quantized.pb \
-        # --input_checkpoint=model_city2kitty \
-        # --output_graph=frozen_city2kitty.pb \
-        # --output_node_names=outputs
 
     num_test_samples = count_text_lines(args.filenames_file)
 
