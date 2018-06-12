@@ -152,7 +152,7 @@ def train(params):
         # SAVER
         summary_writer = tf.summary.FileWriter(args.log_directory + '/' + args.model_name, sess.graph)
 
-        if args.use_prunable:
+        if args.use_prunable and args.checkpoint_path != '':
             var_to_restore_names = print_tensors_in_checkpoint_file(args.checkpoint_path.split(".")[0])
             var_to_restore = [v for v in tf.global_variables() if v.name.split(":")[0] in var_to_restore_names]
             train_loader = tf.train.Saver(var_to_restore)
