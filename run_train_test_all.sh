@@ -10,7 +10,7 @@ LOG_DIRECTORY=logs/
 
 # Training
 TRAIN_DATA_PATH=/home/shared/data/KITTI/
-TRAIN_FILENAMES_FILE=utils/filenames/kitti_train_files_png.txt
+TRAIN_FILENAMES_FILE=utils/filenames/kitti_train_files_26_png.txt
 
 # Testing
 TEST_DATA_PATH=/home/shared/data/KITTI/
@@ -22,7 +22,10 @@ DISP_PATH=disparities/
 # For pickle
 RESULTS_PATH=logs/
 
-for SPARSITY in 0.4 0.6 0.8
+# Checkpoint model
+CHECKPOINT_PATH=models/model_kitti
+
+for SPARSITY in 0.3 0.5 0.7 0.9
 do
     echo "Training ${SPARSITY} sparsity..."
     python monodepth_main.py --mode train \
@@ -32,7 +35,9 @@ do
     --use_prunable \
     --pruning_hparams "target_sparsity=${SPARSITY}, sparsity_function_begin_step=10000, sparsity_function_end_step=50000" \
     --output_directory ${DISP_PATH} \
-    --log_directory ${LOG_DIRECTORY}
+    --log_directory ${LOG_DIRECTORY} \
+    --checkpoint_path ${CHECKPOINT_PATH} \
+    --retrain \
 
     echo "Testing ${SPARSITY} sparsity..."
     python monodepth_main.py --mode test \
