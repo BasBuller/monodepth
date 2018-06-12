@@ -33,7 +33,7 @@ do
     --data_path ${TRAIN_DATA_PATH} \
     --filenames_file ${TRAIN_FILENAMES_FILE} \
     --use_prunable \
-    --pruning_hparams "target_sparsity=${SPARSITY}, sparsity_function_begin_step=10000, sparsity_function_end_step=50000" \
+    --pruning_hparams "target_sparsity=${SPARSITY}, sparsity_function_begin_step=5000, sparsity_function_end_step=15000" \
     --output_directory ${DISP_PATH} \
     --log_directory ${LOG_DIRECTORY} \
     --checkpoint_path ${CHECKPOINT_PATH} \
