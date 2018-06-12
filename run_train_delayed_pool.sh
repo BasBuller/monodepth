@@ -2,9 +2,9 @@
 python monodepth_main.py --mode train \
 --model_name delayed_pool_two \
 --encoder delayed_pool_two \
---data_path data/stereo_2015/ \
---filenames_file utils/filenames/kitti_stereo_2015_test_files_png.txt \
+--data_path /home/shared/data/KITTI/ \
+--filenames_file utils/filenames/kitti_train_files.txt \
 --log_directory logs/ \
---num_epochs 1 \
---batch_size 10
+--num_epochs 50 \
+--batch_size 8
 # --checkpoint_path models/squeeze_net 
