@@ -12,15 +12,15 @@ TRAIN_FILENAMES_FILE=utils/filenames/kitti_train_files_png.txt
 #TRAIN_DATA_PATH=/home/shared/KITTI/
 TRAIN_DATA_PATH=/home/shared/data/KITTI/
 
-#TEST_DATA_PATH=/home/shared/KITTI/stereo_2015/
-TEST_DATA_PATH=/home/shared/data/KITTI/
-#TEST_FILENAMES_FILE=utils/filenames/kitti_stereo_2015_test_files_png.txt
-TEST_FILENAMES_FILE=utils/filenames/kitti_test_files_png.txt
+TEST_DATA_PATH=/home/shared/data/KITTI/stereo_2015/
+#TEST_DATA_PATH=/home/shared/data/KITTI/
+TEST_FILENAMES_FILE=utils/filenames/kitti_stereo_2015_test_files_png.txt
+#TEST_FILENAMES_FILE=utils/filenames/kitti_test_files_png.txt
 
 RESULTS_PATH=/home/shared/results/results.pickle
 
 #for LAYERS in 6 5 4
-for LAYERS in 5 4
+for LAYERS in 6 5
 do
     echo "Training ${LAYERS} layers..."
     python monodepth_main.py --mode train \
