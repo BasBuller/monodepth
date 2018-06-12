@@ -19,7 +19,8 @@ parser = argparse.ArgumentParser(description='Weight evaluations for monodepth m
 parser.add_argument('--eval_type',      type=str,   help='type of evaluation function to use', default='mean_abs')
 parser.add_argument('--num_std',        type=float, help='number of standard deviations to use', default=2)
 parser.add_argument('--output_dir',     type=str,   help='path to output directory', required=True)
-parser.add_argument('--en_decoder_dir', type=str, help='path to encoder or decoder directory', required=True)
+parser.add_argument('--encoder_dir', type=str, help='path to encoder directory', required=True)
+parser.add_argument('--decoder_dir', type=str, help='path to decoder directory', required=True)
 
 args = parser.parse_args()
 
@@ -81,7 +82,7 @@ def save_sizes(w: np.ndarray, weight_path: str, output_dir: str) -> None:
     layer = parts[-2]
 
     idx = df.index[(df['en/de'] == en_de) & (df['Layer'] == layer)]
-    data = {'en/de': en_de, 'Layer': layer, 'Shape': w.shape[-1]}
+    data = {'en/de': en_de, 'Layer': layer, 'Shape': w.shape[-2:]}
     if idx.empty:
         df = df.append(data, ignore_index=True)
     else:
@@ -138,6 +139,32 @@ def eval_sum_l2(w: np.ndarray) -> np.ndarray:
     return sum_l2_array
 
 
+def eval(w: np.ndarray) -> np.ndarray:
+    if args.eval_type == 'mean':
+        eval_array = eval_mean(w)
+    elif args.eval_type == 'mean_abs':
+        eval_array = eval_mean_abs(w)
+    elif args.eval_type == 'mean_l2':
+        eval_array = eval_mean_l2(w)
+    elif args.eval_type == 'sum':
+        eval_array = eval_sum(w)
+    elif args.eval_type == 'sum_abs':
+        eval_array = eval_sum_abs(w)
+    elif args.eval_type == 'sum_l2':
+        eval_array = eval_sum_l2(w)
+    else:
+        eval_array = []
+        print('\nPlease enter one of the following options for --eval_type:\n'
+              'mean\n'
+              'mean_abs\n'
+              'mean_l2\n'
+              'sum\n'
+              'sum_abs\n'
+              'sum_l2\n')
+        quit()
+    return eval_array
+
+
 def prune(w: np.ndarray, b: np.ndarray, w_1: np.ndarray,
           b_1: np.ndarray, eval_array: np.ndarray) -> np.ndarray:
     std     = np.std(eval_array)
@@ -152,57 +179,84 @@ def prune(w: np.ndarray, b: np.ndarray, w_1: np.ndarray,
     b_pruned    = np.delete(b, to_prune, -1)
     w_1_pruned  = np.delete(w_1, to_prune, -2)
     # b_1_pruned  = np.delete(b_1, to_prune, -1)
-    b_1_pruned = 0
+    b_1_pruned = b_1
 
-    print(f'\nMean = {mean:.5f}\nSTD  = {std:.5f}')
-    print(f'Removed filters: {len(to_prune[0])} ({len(to_prune[0])/len(eval_array)*100}%)\n')
-    print(f' w_pruned: {w_pruned.shape}, w_1_pruned: {w_1_pruned.shape}')
+    # print(f'\nMean = {mean:.5f}\nSTD  = {std:.5f}')
+    # print(f'Removed filters: {len(to_prune[0])} ({len(to_prune[0])/len(eval_array)*100}%)\n')
+    # print(f' w_pruned: {w_pruned.shape}, w_1_pruned: {w_1_pruned.shape}')
     return w_pruned, b_pruned, w_1_pruned, b_1_pruned
 
 
 def main():
     # weight_path = Path(args.weight_path)
     output_dir = Path(args.output_dir)
-    dirs, weight_paths, bias_paths = get_weight_paths(args.en_decoder_dir)
+    en_dirs, en_weight_paths, en_bias_paths = get_weight_paths(args.encoder_dir)
+    de_dirs, de_weight_paths, de_bias_paths = get_weight_paths(args.decoder_dir)
+    # dirs = np.append(en_dirs, de_dirs)
+    # weight_paths = np.append(en_weight_paths, de_weight_paths)
+    # bias_paths = np.append(en_bias_paths, de_bias_paths)
+    dirs = en_dirs
+    weight_paths = en_weight_paths
+    bias_paths = en_bias_paths
+
     for i in (range(len(dirs) - 1)):
         weight_path     = Path(f'{dirs[i]}/{weight_paths[i]}')
         bias_path       = Path(f'{dirs[i]}/{bias_paths[i]}')
         weight_path_1   = Path(f'{dirs[i+1]}/{weight_paths[i+1]}')
         bias_path_1     = Path(f'{dirs[i+1]}/{bias_paths[i+1]}')
 
-        w   = load_weights(weight_path)
-        b   = load_biases(bias_path)
-        w_1 = load_weights(weight_path_1)
-        b_1 = load_biases(bias_path_1)
+        if i == 0: # Also save first layer (not to prune)
+            w = load_weights(weight_path)
+            b = load_biases(bias_path)
+            save_weights_biases(w, weight_path, output_dir)
+            save_weights_biases(b, bias_path, output_dir)
+            save_sizes(w, weight_path, output_dir)
+        if not weight_path.match('*_keep.npy'):
+            w   = load_weights(weight_path)
+            b   = load_biases(bias_path)
+            w_1 = load_weights(weight_path_1)
+            b_1 = load_biases(bias_path_1)
 
-        if args.eval_type == 'mean':
-            eval_array = eval_mean(w)
-        elif args.eval_type == 'mean_abs':
-            eval_array = eval_mean_abs(w)
-        elif args.eval_type == 'mean_l2':
-            eval_array = eval_mean_l2(w)
-        elif args.eval_type == 'sum':
-            eval_array = eval_sum(w)
-        elif args.eval_type == 'sum_abs':
-            eval_array = eval_sum_abs(w)
-        elif args.eval_type == 'sum_l2':
-            eval_array = eval_sum_l2(w)
-        else:
-            eval_array = []
-            print('\nPlease enter one of the following options for --eval_type:\n'
-                  'mean\n'
-                  'mean_abs\n'
-                  'mean_l2\n'
-                  'sum\n'
-                  'sum_abs\n'
-                  'sum_l2\n')
-            quit()
+            if weight_path.match('*Conv_1*'):
+                w_de = load_weights()
+                b_de = load_biases()
+                w_de_1 = load_weights()
+                b_de_1 = load_biases()
 
-        w_pruned, b_pruned, w_1_pruned, b_1_pruned = prune(w, b, w_1, b_1, eval_array)
+            eval_array = eval(w)
+            # if args.eval_type == 'mean':
+            #     eval_array = eval_mean(w)
+            # elif args.eval_type == 'mean_abs':
+            #     eval_array = eval_mean_abs(w)
+            # elif args.eval_type == 'mean_l2':
+            #     eval_array = eval_mean_l2(w)
+            # elif args.eval_type == 'sum':
+            #     eval_array = eval_sum(w)
+            # elif args.eval_type == 'sum_abs':
+            #     eval_array = eval_sum_abs(w)
+            # elif args.eval_type == 'sum_l2':
+            #     eval_array = eval_sum_l2(w)
+            # else:
+            #     eval_array = []
+            #     print('\nPlease enter one of the following options for --eval_type:\n'
+            #           'mean\n'
+            #           'mean_abs\n'
+            #           'mean_l2\n'
+            #           'sum\n'
+            #           'sum_abs\n'
+            #           'sum_l2\n')
+            #     quit()
 
-        save_weights_biases(w_pruned, weight_path, output_dir)
-        save_weights_biases(b_pruned, weight_path, output_dir)
-        save_sizes(w_pruned, weight_path, output_dir)
+            w_pruned, b_pruned, w_1_pruned, b_1_pruned = prune(w, b, w_1, b_1, eval_array)
+
+            save_weights_biases(w_pruned, weight_path, output_dir)
+            save_weights_biases(b_pruned, weight_path, output_dir)
+            save_weights_biases(w_1_pruned, weight_path_1, output_dir)
+            save_weights_biases(b_1_pruned, bias_path_1, output_dir)
+
+            save_sizes(w_pruned, weight_path, output_dir)
+            save_sizes(w_1_pruned, weight_path_1, output_dir)
+        else: pass
 
 
 if __name__ == '__main__':

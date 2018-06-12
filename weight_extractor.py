@@ -24,6 +24,24 @@ parser.add_argument('--input_width',      type=int,   help='input width', defaul
 
 args = parser.parse_args()
 
+def save_weights(var, names, sess, prune=True):
+    vars = sess.run(var)
+    for i in range(len(names)):
+        name = names[i].split('/')
+        save_folder = '{0}/{1}/{2}/{3}'.format(restore_path.split('/')[2],
+                                               restore_path.split('/')[3],
+                                               name[1],
+                                               name[2])
+        if prune:
+            save_path = '{0}/{1}.npy'.format(save_folder,
+                                            name[3])
+        else:
+            save_path = f'{save_folder}/{name[3]}_keep.npy'
+        if not Path(save_folder).exists():
+            Path(save_folder).mkdir(parents=True)
+        np.save(save_path, vars[i])
+
+
 def weight_extractor(params):
     global restore_path
     left  = tf.placeholder(tf.float32, [2, args.input_height, args.input_width, 3])
@@ -47,8 +65,8 @@ def weight_extractor(params):
     train_saver.restore(sess, restore_path)
 
     # SAVE WEIGHTS TO .npy FILES
-    var, names = [], []
-    keep_weights = ["model/encoder/Conv_1/weights:0",
+    var_prune, names_prune, var_keep, names_keep = [], [], [], []
+    prune_weights = ["model/encoder/Conv_1/weights:0",
                     "model/encoder/Conv_3/weights:0",
                     "model/encoder/Conv_5/weights:0",
                     "model/encoder/Conv_7/weights:0",
@@ -76,26 +94,21 @@ def weight_extractor(params):
                     "model/decoder/Conv_9/biases:0",
                     "model/decoder/Conv_12/biases:0",
                     "model/decoder/Conv_15/biases:0"]
+
     for v in tf.trainable_variables():
-        if v.name in keep_weights:
-            var.append(v)
-            names.append(v.name)
+        if v.name in prune_weights:
+            var_prune.append(v)
+            names_prune.append(v.name)
+        elif v.name not in prune_weights:
+            var_keep.append(v)
+            names_keep.append(v.name)
         # var.append(v)
         # names.append(v.name)
-    vars = sess.run(var)
-    for i in range(len(names)):
-        name = names[i].split('/')
-        save_folder = '{0}/{1}/{2}/{3}'.format(restore_path.split('/')[2],
-                                                restore_path.split('/')[3],
-                                                name[1],
-                                                name[2])
-        save_path    = '{0}/{1}.npy'.format(save_folder,
-                                                name[3])
-        if not Path(save_folder).exists():
-            Path(save_folder).mkdir(parents=True)
-        np.save(save_path, vars[i])
+    save_weights(var_prune, names_prune, sess, prune=True)
+    save_weights(var_keep, names_keep, sess, prune=False)
 
     print('done!')
+
 
 def main(_):
 
