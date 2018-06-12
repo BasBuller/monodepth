@@ -175,6 +175,9 @@ def train(params):
             # Parse pruning hyperparameters
             pruning_hparams = pruning.get_pruning_hparams().parse(args.pruning_hparams)
 
+            # Print pruning parameters for checking
+            print(f"pruning parameters: {pruning_hparams}")
+
             # Create a pruning object using the pruning hyperparameters
             pruning_obj = pruning.Pruning(pruning_hparams, global_step=global_step)
 
