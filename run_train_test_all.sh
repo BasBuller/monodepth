@@ -37,7 +37,7 @@ do
     --output_directory ${DISP_PATH} \
     --log_directory ${LOG_DIRECTORY} \
     --checkpoint_path ${CHECKPOINT_PATH} \
-    --retrain \
+    --retrain
 
     echo "Testing ${SPARSITY} sparsity..."
     python monodepth_main.py --mode test \

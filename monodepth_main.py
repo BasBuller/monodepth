@@ -268,7 +268,7 @@ def test(params):
     summary_writer.add_graph(sess.graph)
 
     # SAVER
-    train_loader = tf.train.Saver()
+    test_loader = tf.train.Saver()
 
     # INIT
     sess.run(tf.global_variables_initializer())
@@ -280,8 +280,10 @@ def test(params):
     if args.checkpoint_path == '':
         restore_path = tf.train.latest_checkpoint(args.log_directory + '/' + args.model_name)
     else:
-        restore_path = args.checkpoint_path.split(".")[0]
-    train_loader.restore(sess, restore_path)
+        # Doesn't work since models are saved with . in name
+        # restore_path = args.checkpoint_path.split(".")[0]
+        restore_path = args.checkpoint_path
+    test_loader.restore(sess, restore_path)
 
     num_test_samples = count_text_lines(args.filenames_file)
 

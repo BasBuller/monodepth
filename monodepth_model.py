@@ -126,11 +126,7 @@ class MonodepthModel(object):
         disp = 0.3 * self.conv(x, 2, 3, 1, tf.nn.sigmoid)
         return disp
 
-    # def conv(self, x, num_out_layers, kernel_size, stride, activation_fn=tf.nn.elu):
-    #     p = np.floor((kernel_size - 1) / 2).astype(np.int32)
-    #     p_x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]])
-    #     return slim.conv2d(p_x, num_out_layers, kernel_size, stride, 'VALID', activation_fn=activation_fn)
-
+    # Prunable version!
     def conv(self, x, num_out_layers, kernel_size, stride, activation_fn=tf.nn.elu):
         p = np.floor((kernel_size - 1) / 2).astype(np.int32)
         p_x = tf.pad(x, [[0, 0], [p, p], [p, p], [0, 0]])
@@ -140,11 +136,6 @@ class MonodepthModel(object):
         conv1 = self.conv(x,     num_out_layers, kernel_size, 1)
         conv2 = self.conv(conv1, num_out_layers, kernel_size, 2)
         return conv2
-
-    # def conv_block_prunable(self, x, num_out_layers, kernel_size):
-    #     conv1 = self.conv_prunable(x,     num_out_layers, kernel_size, 1)
-    #     conv2 = self.conv_prunable(conv1, num_out_layers, kernel_size, 2)
-    #     return conv2
 
     def maxpool(self, x, kernel_size):
         p = np.floor((kernel_size - 1) / 2).astype(np.int32)
@@ -174,11 +165,6 @@ class MonodepthModel(object):
         upsample = self.upsample_nn(x, scale)
         conv = self.conv(upsample, num_out_layers, kernel_size, 1)
         return conv
-
-    # def upconv_prunable(self, x, num_out_layers, kernel_size, scale):
-    #     upsample = self.upsample_nn(x, scale)
-    #     conv = self.conv_prunable(upsample, num_out_layers, kernel_size, 1)
-    #     return conv
 
     def deconv(self, x, num_out_layers, kernel_size, scale):
         p_x = tf.pad(x, [[0, 0], [1, 1], [1, 1], [0, 0]])
