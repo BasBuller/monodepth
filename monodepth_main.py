@@ -251,6 +251,8 @@ def train(params):
 def test(params):
     """Test function."""
 
+    global_step = tf.Variable(0, trainable=False)
+
     dataloader = MonodepthDataloader(args.data_path, args.filenames_file, params, args.dataset, args.mode)
     left  = dataloader.left_image_batch
     right = dataloader.right_image_batch
@@ -278,6 +280,13 @@ def test(params):
         # restore_path = args.checkpoint_path.split(".")[0]
         restore_path = args.checkpoint_path
     test_loader.restore(sess, restore_path)
+
+    print(f"global step: {sess.run(global_step)}")
+
+    if args.use_prunable:
+        # Print weight sparsity
+        print(f"weight sparsity: {sess.run(pruning.get_weight_sparsity())}")
+        print(f"weights: {sess.run(pruning.get_masks())[0][0][0]}")
 
     num_test_samples = count_text_lines(args.filenames_file)
 
