@@ -9,8 +9,8 @@ MODEL_NAME=pruning
 LOG_DIRECTORY=logs/
 
 # Testing
-TEST_DATA_PATH=/home/shared/data/KITTI/
-TEST_FILENAMES_FILE=utils/filenames/kitti_test_files_png.txt
+TEST_DATA_PATH=/home/shared/data/KITTI/stereo_2015/
+TEST_FILENAMES_FILE=utils/filenames/kitti_stereo_2015_test_files_png.txt
 
 # Evaluation
 EVAL_DATA_PATH=/home/shared/data/KITTI/stereo_2015/
