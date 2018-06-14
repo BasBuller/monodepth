@@ -257,15 +257,9 @@ def test(params):
 
     model = MonodepthModel(params, args.mode, left, right)
 
-    # SUMMARY
-    summary_writer = tf.summary.FileWriter(args.log_directory + '/' + args.model_name)
-
     # SESSION
     config = tf.ConfigProto(allow_soft_placement=True)
     sess = tf.Session(config=config)
-
-    # WRITE SUMMARY
-    summary_writer.add_graph(sess.graph)
 
     # SAVER
     test_loader = tf.train.Saver()
