@@ -283,10 +283,45 @@ def test(params):
 
     print(f"global step: {sess.run(global_step)}")
 
+    print(f"global variables: {tf.global_variables()}")
+    weights = sess.run(pruning.get_weights())
+    masks = sess.run(pruning.get_masks())
+    thresholds = sess.run(pruning.get_thresholds())
+
+    weights = []
+    thresholds = []
+
+    for i, variable in enumerate(tf.global_variables()):
+
+        if "weights" in variable.name:
+
+            weights.append(variable)
+            # print(weights[i].shape)
+            # weight = sess.run(variable)
+            # weights[i][masks[i].astype(int)] = 0.
+            # print(weights[i][0])
+            # print(thresholds[i])
+            # weights[i][abs(weights[i]) < thresholds[i]] = 0.
+            # print(weights[i][0])
+            # print(masks[i][0])
+            # print(weight[masks[i]])
+            # tf.assign(variable, weights[i])
+
+        elif "threshold" in variable.name:
+
+            thresholds.append(variable)
+
+    for weight, threshold in zip(weights, thresholds):
+
+        correct = np.asarray(sess.run(weight))
+        thres = sess.run(threshold)
+        correct[abs(correct) < thres] = 0.
+        sess.run(tf.assign(weight, correct))
+
     if args.use_prunable:
         # Print weight sparsity
         print(f"weight sparsity: {sess.run(pruning.get_weight_sparsity())}")
-        print(f"weights: {sess.run(pruning.get_masks())[0][0][0]}")
+        print(f"weights: {sess.run(pruning.get_masks())[0].shape}")
 
     num_test_samples = count_text_lines(args.filenames_file)
 
