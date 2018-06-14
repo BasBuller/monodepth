@@ -32,7 +32,7 @@ do
     --use_prunable \
     --output_directory ${DISP_PATH} \
     --log_directory ${LOG_DIRECTORY} \
-    --checkpoint_path ${LOG_DIRECTORY}/${MODEL_NAME}_${SPARSITY}/${MODEL_NAME}_${SPARSITY}
+    --checkpoint_path ${LOG_DIRECTORY}/${MODEL_NAME}_${SPARSITY}/${MODEL_NAME}_${SPARSITY}-30000
 
     echo "Evaluating ${SPARSITY} sparsity..."
     python utils/evaluate_kitti.py \

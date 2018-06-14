@@ -318,10 +318,9 @@ def test(params):
     #     correct[abs(correct) < thres] = 0.
     #     sess.run(tf.assign(weight, correct))
 
-    # if args.use_prunable:
-    #     # Print weight sparsity
-    #     print(f"weight sparsity: {sess.run(pruning.get_weight_sparsity())}")
-    #     print(f"weights: {sess.run(pruning.get_masks())[0].shape}")
+    if args.use_prunable:
+        # Print weight sparsity
+        print(f"weight sparsity: {sess.run(pruning.get_weight_sparsity())}")
 
     num_test_samples = count_text_lines(args.filenames_file)
 
