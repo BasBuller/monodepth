@@ -90,6 +90,7 @@ def train(params):
 
         opt_step = tf.train.AdamOptimizer(learning_rate)
 
+        print("model: {}".format(params.encoder))
         print("total number of samples: {}".format(num_training_samples))
         print("total number of steps: {}".format(num_total_steps))
 
@@ -175,7 +176,8 @@ def train(params):
                 train_saver.save(sess, args.log_directory + '/' + args.model_name + '/model', global_step=step)
 
         train_saver.save(sess, args.log_directory + '/' + args.model_name + '/model', global_step=num_total_steps)
-        train_saver.save(sess, args.checkpoint_path + '/' + args.model_name, global_step=num_total_steps)
+        if args.checkpoint_path:
+            train_saver.save(sess, args.checkpoint_path + '/model-' + args.model_name)
 
 def test(params):
     """Test function."""
