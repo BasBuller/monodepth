@@ -31,6 +31,7 @@ parser = argparse.ArgumentParser(description='Monodepth TensorFlow implementatio
 parser.add_argument('--encoder',          type=str,   help='type of encoder, vgg or resnet50', default='vgg')
 parser.add_argument('--image_path',       type=str,   help='path to the image', required=True)
 parser.add_argument('--checkpoint_path',  type=str,   help='path to a specific checkpoint to load', required=True)
+parser.add_argument('--use_prunable',                 help='if set, will use prunable convolutions', action='store_true')
 parser.add_argument('--input_height',     type=int,   help='input height', default=256)
 parser.add_argument('--input_width',      type=int,   help='input width', default=512)
 
@@ -78,7 +79,8 @@ def test_simple(params):
     threads = tf.train.start_queue_runners(sess=sess, coord=coordinator)
 
     # RESTORE
-    restore_path = args.checkpoint_path.split(".")[0]
+    # restore_path = args.checkpoint_path.split(".")[0]
+    restore_path = args.checkpoint_path
     train_saver.restore(sess, restore_path)
 
     disp = sess.run(model.disp_left_est[0], feed_dict={left: input_images})
@@ -97,6 +99,7 @@ def main(_):
 
     params = monodepth_parameters(
         encoder=args.encoder,
+        use_prunable=args.use_prunable,
         height=args.input_height,
         width=args.input_width,
         batch_size=2,
