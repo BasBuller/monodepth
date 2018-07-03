@@ -1,8 +1,13 @@
 #!/bin/sh
+for MODEL in squeeze_net delayed_pool small_decoder
+do
+echo "Running ${MODEL}..."
 python monodepth_main.py --mode test \
---data_path /media/huis/EMDrive/DeepLearningData/KITTI/stereo_2015/ \
+--encoder $MODEL \
+--data_path data/stereo_2015/ \
 --filenames_file utils/filenames/kitti_stereo_2015_test_files_png.txt \
---output_directory disparities/ \
---log_directory logs/ \
---checkpoint_path models/model_city2kitti \
---full_summary
+--output_directory disparities/$MODEL/ \
+--log_directory logs/$MODEL \
+--checkpoint_path models/$MODEL/$MODEL \
+done
+

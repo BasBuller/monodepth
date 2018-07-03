@@ -217,15 +217,17 @@ def test(params):
     num_test_samples = count_text_lines(args.filenames_file)
 
     print('now testing {} files'.format(num_test_samples))
+    t = time.time()
     disparities    = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
     disparities_pp = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
     for step in range(num_test_samples):
         disp = sess.run(model.disp_left_est[0])
         disparities[step] = disp[0].squeeze()
         disparities_pp[step] = post_process_disparity(disp.squeeze())
+        print(step)
 
     print('done.')
-
+    print(time.time() -t, "seconds")
     print('writing disparities.')
     if args.output_directory == '':
         output_directory = os.path.dirname(args.checkpoint_path)
@@ -234,8 +236,8 @@ def test(params):
     np.save(output_directory + '/disparities.npy',    disparities)
     np.save(output_directory + '/disparities_pp.npy', disparities_pp)
 
-    disp_to_img = scp.misc.imresize(disp_pp.squeeze(), [original_height, original_width])
-    plt.imsave(os.path.join(output_directory, "{}_disp.png".format(output_name)), disp_to_img, cmap='plasma')
+#    disp_to_img = scp.misc.imresize(disparities_pp.squeeze(), [original_height, original_width])
+#    plt.imsave(os.path.join(output_directory, "{}_disp.png".format(output_name)), disp_to_img, cmap='plasma')
 
     print('done.')
 

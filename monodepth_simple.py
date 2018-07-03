@@ -89,7 +89,7 @@ def test_simple(params):
 
     np.save(os.path.join(output_directory, "{}_disp.npy".format(output_name)), disp_pp)
     disp_to_img = scipy.misc.imresize(disp_pp.squeeze(), [original_height, original_width])  
-
+    plt.imsave(os.path.join(output_directory, "{}_disp.png".format(output_name)), disp_to_img, cmap='plasma')
     print('done!')
 
 def main(_):
