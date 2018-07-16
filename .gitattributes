@@ -13,3 +13,4 @@
 # ============
 *.pickle binary
 *.pdf binary
+*.png binary
