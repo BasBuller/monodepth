@@ -1,10 +1,12 @@
 # Compression Methods for Monocular Depth Estimation
 
-<object data="https://github.com/Huizerd/monodepth/blob/master/Group_3-Compression_Methods_for_Monocular_Depth_Estimation.pdf" type="application/pdf" width="700px" height="700px">
-    <embed src="https://github.com/Huizerd/monodepth/blob/master/Group_3-Compression_Methods_for_Monocular_Depth_Estimation.pdf">
-        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="https://github.com/Huizerd/monodepth/blob/master/Group_3-Compression_Methods_for_Monocular_Depth_Estimation.pdf">Download PDF</a>.</p>
-    </embed>
-</object>
+<p align="center">
+  <img src="https://github.com/Huizerd/monodepth/blob/master/Group_3-Compression_Methods_for_Monocular_Depth_Estimation.png" alt="poster">
+</p>
+
+Monocular depth estimation predicts a depth map from a single RGB image. This task is commonly performed using a convolutional neural network, but these networks tend to be large. This makes it difficult to perform monocular depth estimation on embedded systems. In this work, three methods are used to reduce the number of parameters of the *MonoDepth* network by [Godard et al.](https://arxiv.org/abs/1609.03677): pruning of small weights, the application of [*SqueezeNet*](https://arxiv.org/abs/1602.07360) architectures and the removal of entire layers. The resulting model size and prediction accuracy is compared. In all cases, the model size can be reduced by roughly a factor six with a negligible impact on accuracy.
+
+This project was carried out as part of the CS4180 Deep Learning course at TU Delft.
 
 # monodepth
 Tensorflow implementation of unsupervised single image depth prediction using a convolutional neural network.
