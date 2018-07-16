@@ -8,6 +8,11 @@ Monocular depth estimation predicts a depth map from a single RGB image. This ta
 
 This project was carried out as part of the CS4180 Deep Learning course at TU Delft.
 
+There are three separate branches, each containing their own compression method:
+- `jesse`: pruning
+- `bas`: SqueezeNet
+- `tom`: removing layers
+
 # monodepth
 Tensorflow implementation of unsupervised single image depth prediction using a convolutional neural network.
 
